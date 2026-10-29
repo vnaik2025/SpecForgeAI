@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgentForge v2.0 - Autonomous Spec Engine</title>
+<!-- Google Fonts: Saira & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Saira:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN with forms and container queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Saira', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            forge: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Style Blocks -->
+<style data-purpose="custom-scrollbars">
+    /* Compact engineering-grade scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+<style data-purpose="typography-and-density">
+    body {
+      font-family: 'Saira', sans-serif;
+      background-color: #ffffff;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+    .font-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+<!-- END: Style Blocks -->
+</head>
+<body class="bg-white text-slate-900 min-w-[1400px] flex flex-col min-h-screen selection:bg-slate-900 selection:text-white">
+<!-- BEGIN: MainHeader -->
+<header class="border-b border-slate-200 bg-white sticky top-0 z-50 px-6 py-2.5 flex items-center justify-between" data-purpose="top-navigation">
+<div class="flex items-center space-x-6">
+<div class="flex items-center space-x-2.5">
+<div class="w-7 h-7 bg-slate-900 text-white rounded flex items-center justify-center font-bold text-xs shadow-sm">
+          [A]
+        </div>
+<div class="flex items-center space-x-2">
+<span class="font-bold text-sm tracking-tight text-slate-950">AgentForge</span>
+<span class="text-[10px] bg-slate-100 border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-mono font-medium">v2.0</span>
+</div>
+</div>
+<div class="h-4 w-[1px] bg-slate-200"></div>
+<!-- Live Engine Status Badge -->
+<div class="flex items-center space-x-2 text-[11px] font-medium text-slate-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-emerald-700 font-mono tracking-tight text-[10px] uppercase">Engine Online • Authenticated</span>
+</div>
+</div>
+<!-- Navigation Actions -->
+<nav class="flex items-center space-x-5 text-xs font-medium text-slate-600">
+<a class="hover:text-slate-900 transition-colors flex items-center gap-1.5" href="#blueprints">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        Blueprints
+      </a>
+<a class="hover:text-slate-900 transition-colors" href="#">Presets</a>
+<a class="hover:text-slate-900 transition-colors" href="#">Documentation</a>
+<div class="h-4 w-[1px] bg-slate-200"></div>
+<!-- Quick User Panel -->
+<div class="flex items-center space-x-2.5 pl-2">
+<div class="w-6 h-6 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-700">
+          DE
+        </div>
+<span class="text-xs text-slate-800 font-medium font-mono">dev@agentforge.ai</span>
+</div>
+</nav>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: HeroSection -->
+<section class="border-b border-slate-200 bg-slate-50/60 py-8 px-6 text-center" data-purpose="hero-banner">
+<div class="max-w-4xl mx-auto flex flex-col items-center">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-[11px] font-mono font-medium text-slate-700 mb-3 shadow-2xs">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
+        AUTONOMOUS SPEC ENGINE • AI CODING AGENT READY
+      </div>
+<h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+        Scope <span class="text-slate-400 font-normal">→</span> <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 bg-clip-text text-transparent">Production-Ready Agent Specs</span>
+</h1>
+<p class="mt-2.5 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+        Paste your project scope. Define your exact tech stack. AgentForge synthesizes <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">AGENT.md</code>, <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">ARCHITECTURE.md</code>, <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">SETUP.md</code>, and <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">API_SETUP.md</code> — packaged as a root ZIP ready for execution.
+      </p>
+</div>
+</section>
+<!-- END: HeroSection -->
+<!-- BEGIN: WorkstationStudio -->
+<main class="flex-1 max-w-[1720px] w-full mx-auto p-6 grid grid-cols-12 gap-6" data-purpose="dual-pane-studio">
+<!-- Column 1: Project Input Form (42%) -->
+<div class="col-span-5 flex flex-col gap-4">
+<div class="bg-white border border-slate-200 rounded-lg p-5 shadow-xs flex flex-col gap-4">
+<!-- Step Indicator & Header -->
+<div class="flex items-center justify-between border-b border-slate-100 pb-3">
+<div class="flex items-center space-x-2">
+<span class="flex items-center justify-center w-5 h-5 bg-blue-600 text-white rounded-full text-[10px] font-bold">1</span>
+<h2 class="text-xs uppercase font-bold tracking-wider text-slate-900 font-mono">Project Input</h2>
+</div>
+<span class="text-[10px] text-slate-400 font-mono uppercase">Interactive Form</span>
+</div>
+<!-- Project Title Field -->
+<div>
+<label class="block text-xs font-semibold text-slate-800 mb-1.5" for="project-title">Project Title</label>
+<input class="w-full text-xs font-mono bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none transition" id="project-title" placeholder="e.g. Acme Microservice Suite" type="text" value="PulseDesk Issue Tracker"/>
+</div>
+<!-- Blueprint Selector Field -->
+<div>
+<div class="flex justify-between items-center mb-1.5">
+<label class="block text-xs font-semibold text-slate-800" for="org-blueprint">Org Blueprint (Optional)</label>
+<span class="text-[10px] text-slate-500 font-mono">Overridable</span>
+</div>
+<select class="w-full text-xs bg-slate-50 border border-slate-300 rounded px-3 py-2 text-slate-800 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none font-sans" id="org-blueprint">
+<option selected="">PulseDesk Standard Org Engine (Django + Vanilla)</option>
+<option>FastAPI Microservice Engine + Async Worker</option>
+<option>Fullstack Next.js + Tailwind + TRPC Core</option>
+<option>None / Custom Manual Configuration</option>
+</select>
+<p class="text-[11px] text-slate-500 mt-1">Pre-configured org directory tree + strict coding standards applied.</p>
+</div>
+<!-- Tech Stack Tags Input -->
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="text-xs font-semibold text-slate-800">Custom Tech Stack</label>
+<span class="text-[10px] text-slate-400 font-mono">press Enter to add</span>
+</div>
+<div class="p-2 border border-slate-300 rounded bg-white flex flex-wrap gap-1.5 items-center min-h-[46px]">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-800 border border-slate-200">
+              Django <button class="text-slate-400 hover:text-slate-700 leading-none">×</button>
+</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-800 border border-slate-200">
+              DRF <button class="text-slate-400 hover:text-slate-700 leading-none">×</button>
+</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-800 border border-slate-200">
+              PostgreSQL <button class="text-slate-400 hover:text-slate-700 leading-none">×</button>
+</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-800 border border-slate-200">
+              simplejwt <button class="text-slate-400 hover:text-slate-700 leading-none">×</button>
+</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-800 border border-slate-200">
+              Vanilla JS <button class="text-slate-400 hover:text-slate-700 leading-none">×</button>
+</span>
+<input class="border-0 focus:ring-0 text-xs py-0.5 px-1 font-mono text-slate-600 placeholder-slate-400 min-w-[100px] flex-1 outline-none" placeholder="e.g. Celery, Redis..." type="text"/>
+</div>
+<span class="text-[10px] text-slate-500 mt-1 block">These will be strictly adopted — overrides autonomous detection.</span>
+</div>
+<!-- Additional Notes / Constraints -->
+<div>
+<label class="block text-xs font-semibold text-slate-800 mb-1.5" for="strict-notes">Additional Notes / Strict Constraints</label>
+<textarea class="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded p-2.5 text-slate-800 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none leading-relaxed" id="strict-notes" rows="3">pattern: No TypeScript. Prefer async everywhere. JWT auth only. REST not GraphQL. Strict separation of concerns between core modules.</textarea>
+</div>
+<!-- Scope PRD Document Dropzone & Input -->
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="text-xs font-semibold text-slate-800">Scope Document (PRD / Features)</label>
+<div class="flex items-center space-x-2 text-[10px] font-mono">
+<span class="text-slate-400">Load sample:</span>
+<button class="text-blue-600 hover:underline font-semibold">[school-mart]</button>
+<span class="text-slate-300">•</span>
+<button class="text-blue-600 hover:underline font-semibold">[pulsedesk]</button>
+</div>
+</div>
+<!-- File Dropzone Mock -->
+<div class="border border-dashed border-slate-300 rounded-md p-3.5 bg-slate-50 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-100/70 transition-colors">
+<svg class="w-5 h-5 text-slate-400 mb-1" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span class="text-[11px] text-slate-700 font-medium">Drop scope file (.txt, .md, .pdf) or <span class="text-blue-600 underline">browse</span></span>
+</div>
+<!-- PRD Text Content Raw Box -->
+<div class="mt-2.5 relative">
+<textarea class="w-full text-xs font-mono bg-white border border-slate-300 rounded p-2.5 text-slate-800 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none leading-normal" rows="6"># PulseDesk Requirements &amp; Specification
+1. Workspaces &amp; Sprints: Team workspaces, sprint lifecycles (Planned, Active, Completed).
+2. Ticket Management: Priority (Low, Med, High, Urgent), Status (BackLog, In Progress, Review, Done).
+3. Automated Summaries: AI sprint retrospectives and ticket action plans.
+4. Security: Strict RBAC with admin/team roles, simplejwt access &amp; refresh tokens.</textarea>
+<div class="absolute bottom-2 right-2 text-[10px] font-mono text-slate-400 bg-white/90 px-1 rounded">
+              348 words • UTF-8
+            </div>
+</div>
+</div>
+<!-- Primary Generation CTA -->
+<button class="w-full bg-slate-900 hover:bg-black text-white text-xs font-semibold py-3 px-4 rounded-md shadow flex items-center justify-center gap-2 transition cursor-pointer" type="button">
+<svg class="w-4 h-4 text-blue-400 fill-current" viewbox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V14a1 1 0 11-2 0v-.586l-2.293-2.293a1 1 0 011.414-1.414L9 10.586V6a1 1 0 112 0v4.586l.879-.879a1 1 0 111.414 1.414L11 13.414z"></path></svg>
+<span>Generate Scaffold &amp; Spec Files</span>
+</button>
+</div>
+</div>
+<!-- Column 2: Specification Studio (58%) -->
+<div class="col-span-7 flex flex-col gap-4">
+<div class="bg-white border border-slate-200 rounded-lg p-5 shadow-xs flex flex-col h-full">
+<!-- Studio Header -->
+<div class="flex items-center justify-between border-b border-slate-100 pb-3">
+<div class="flex items-center space-x-2">
+<span class="flex items-center justify-center w-5 h-5 bg-emerald-600 text-white rounded-full text-[10px] font-bold">2</span>
+<h2 class="text-xs uppercase font-bold tracking-wider text-slate-900 font-mono">Specification Studio</h2>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 7 FILES READY
+            </span>
+</div>
+</div>
+<!-- Synthesized Package Meta Card -->
+<div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between">
+<div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-slate-900">PulseDesk Issue Tracker</span>
+<span class="text-[10px] text-emerald-600 font-mono bg-emerald-100/60 px-1.5 rounded">Scaffold Ready</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="text-[10px] font-mono text-slate-500">Stack:</span>
+<span class="text-[10px] font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.2 rounded">Django 5.x</span>
+<span class="text-[10px] font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.2 rounded">DRF</span>
+<span class="text-[10px] font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.2 rounded">Vanilla JS</span>
+</div>
+</div>
+<!-- Download / Action Buttons -->
+<div class="flex items-center gap-2">
+<button class="px-2.5 py-1.5 bg-white border border-slate-300 hover:border-slate-400 rounded text-[11px] font-mono text-slate-700 flex items-center gap-1 shadow-2xs">
+<svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Copy Kickoff Prompt
+            </button>
+<button class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-[11px] font-mono font-medium text-white flex items-center gap-1 shadow-2xs">
+<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Download .ZIP
+            </button>
+</div>
+</div>
+<!-- Dual Split: File Explorer + Markdown Pane -->
+<div class="mt-4 grid grid-cols-12 border border-slate-200 rounded-md overflow-hidden flex-1 min-h-[480px]">
+<!-- File Explorer (Sidebar) -->
+<div class="col-span-4 bg-slate-50/70 border-r border-slate-200 p-2.5 flex flex-col font-mono text-xs">
+<div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-1 mb-1 tracking-wider">
+              / PROJECT-ROOT
+            </div>
+<nav class="flex flex-col space-y-0.5">
+<!-- Active File Item -->
+<button class="w-full text-left px-2 py-1.5 rounded bg-blue-50 text-blue-900 border border-blue-200/60 font-semibold flex items-center justify-between">
+<span class="flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewbox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  AGENT.md
+                </span>
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+</button>
+<button class="w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewbox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                ARCHITECTURE.md
+              </button>
+<button class="w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewbox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                SETUP.md
+              </button>
+<button class="w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewbox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                SKILLS.md
+              </button>
+<button class="w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewbox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                API_SETUP.md
+              </button>
+<button class="w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewbox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                SCOPE.md
+              </button>
+<button class="w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewbox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                INITIAL_PROMPT.md
+              </button>
+</nav>
+<div class="mt-auto pt-3 border-t border-slate-200">
+<div class="text-[10px] text-slate-400">Status: Verified Spec</div>
+<div class="text-[10px] text-slate-500 font-bold">SHA: 8f23c91a</div>
+</div>
+</div>
+<!-- Document Viewer Header & Content (Markdown Pane) -->
+<div class="col-span-8 flex flex-col bg-white">
+<!-- Tab Controls -->
+<div class="flex items-center justify-between border-b border-slate-200 px-4 py-2 bg-slate-50/40">
+<div class="flex items-center gap-2">
+<span class="text-xs font-mono font-bold text-slate-800">AGENT.md</span>
+<span class="text-[10px] font-mono text-slate-400">14.8 KB</span>
+</div>
+<div class="flex items-center space-x-1.5">
+<button class="text-[11px] font-mono px-2 py-0.5 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900">Preview</button>
+<button class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600">Raw</button>
+<button class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600">Copy</button>
+<button class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600">↓ .md</button>
+</div>
+</div>
+<!-- Formatted Markdown Content -->
+<div class="p-5 overflow-y-auto max-h-[580px] text-xs text-slate-800 space-y-4">
+<!-- Section 1 -->
+<div>
+<h3 class="text-sm font-bold text-slate-900 uppercase tracking-tight border-b border-slate-100 pb-1.5 mb-2 font-mono">
+                  AI AGENT BOUNDARIES &amp; GUIDELINES
+                </h3>
+<ul class="list-disc pl-4 space-y-1.5 text-slate-700 leading-relaxed font-sans">
+<li><strong>Strict Boundary Enforcement:</strong> PulseDesk issue tracker focuses solely on workspace/sprint management, ticket workflows, and AI sprint analytics.</li>
+<li><strong>Architecture Model:</strong> Django REST Framework back-end strictly coupled with Vanilla JavaScript (ES6+) on the UI. Absolutely <strong>NO React or external UI runtime libraries</strong>.</li>
+<li><strong>Stateless Integrity:</strong> Authenticate solely via JWT tokens in Authorization headers. Session cookies strictly prohibited for API endpoints.</li>
+</ul>
+</div>
+<!-- Section 2: Code Persona -->
+<div>
+<h4 class="text-xs font-bold text-slate-900 uppercase font-mono mb-1.5">Code Persona</h4>
+<p class="text-slate-600 leading-relaxed">
+                  Senior Django &amp; Python Architect. Principles: Clean, modular, thin views, fat services/managers, strict null-checks in JS, zero raw console logs in production, and fully reusable logic encapsulated in helper modules.
+                </p>
+</div>
+<!-- Section 3: Data Table (Naming Conventions) -->
+<div>
+<h4 class="text-xs font-bold text-slate-900 uppercase font-mono mb-2">1. NAMING CONVENTIONS</h4>
+<div class="border border-slate-200 rounded overflow-hidden">
+<table class="w-full text-left border-collapse text-[11px]">
+<thead class="bg-slate-100 font-mono text-slate-700">
+<tr>
+<th class="p-2 border-b border-r border-slate-200">Element</th>
+<th class="p-2 border-b border-r border-slate-200">Format</th>
+<th class="p-2 border-b border-slate-200">Example</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 font-mono">
+<tr class="hover:bg-slate-50/50">
+<td class="p-2 border-r border-slate-200 text-slate-900 font-semibold">Files &amp; Directories</td>
+<td class="p-2 border-r border-slate-200 text-slate-600">snake_case (Python), kebab-case (JS/CSS)</td>
+<td class="p-2 text-slate-600">ticket_service.py, auth-client.js</td>
+</tr>
+<tr class="hover:bg-slate-50/50">
+<td class="p-2 border-r border-slate-200 text-slate-900 font-semibold">UI Components</td>
+<td class="p-2 border-r border-slate-200 text-slate-600">kebab-case with standard prefix</td>
+<td class="p-2 text-slate-600">&lt;div class="pd-ticket-card"&gt;</td>
+</tr>
+<tr class="hover:bg-slate-50/50">
+<td class="p-2 border-r border-slate-200 text-slate-900 font-semibold">API Routes</td>
+<td class="p-2 border-r border-slate-200 text-slate-600">kebab-case, plural nouns</td>
+<td class="p-2 text-slate-600">/api/v1/workspaces/</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Section 4: Code Block -->
+<div>
+<h4 class="text-xs font-bold text-slate-900 uppercase font-mono mb-1.5">2. CORE ARCHITECTURE SPEC</h4>
+<pre class="bg-slate-900 text-slate-100 p-3 rounded font-mono text-[11px] overflow-x-auto leading-normal">pulse_desk/
+├── core/                  # Base config, settings, and root URLs
+├── apps/
+│   ├── authentication/    # JWT Auth, roles, user accounts
+│   ├── workspaces/        # Workspaces, membership, sprints
+│   └── tickets/           # Ticket CRUD, workflows, events
+└── static/js/             # Modular ES6 Vanilla clients
+    ├── api.js             # Fetch wrapper with auto-refresh JWT
+    └── app.js             # Entrypoint dispatcher</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- END: WorkstationStudio -->
+<!-- BEGIN: BlueprintsSection -->
+<section class="border-t border-slate-200 bg-slate-50/40 p-6 mt-4" data-purpose="stored-blueprints" id="blueprints">
+<div class="max-w-[1720px] mx-auto">
+<div class="flex items-center justify-between mb-4">
+<div>
+<h2 class="text-xs uppercase font-bold tracking-wider text-slate-900 font-mono flex items-center gap-2">
+<span class="w-2 h-2 rounded bg-blue-600"></span> STORED TECH STACK BLUEPRINTS
+          </h2>
+<p class="text-xs text-slate-500 mt-0.5">Pre-configured architectures, directory trees, and agent standards stored in DB.</p>
+</div>
+<button class="text-xs font-mono font-medium text-blue-600 hover:text-blue-800 hover:underline">
+          + Register New Blueprint
+        </button>
+</div>
+<!-- Blueprints Grid -->
+<div class="grid grid-cols-4 gap-4">
+<!-- Blueprint Card 1 -->
+<article class="bg-white border border-slate-200 rounded p-4 shadow-2xs hover:border-slate-400 transition-colors">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xs font-bold text-slate-900">Django REST Framework + Modern Frontend</h3>
+</div>
+<p class="text-xs text-slate-600 mb-3 leading-relaxed">
+            Production-ready Python backend with Django REST Framework, JWT authentication, modular apps, and a modern frontend.
+          </p>
+<div class="flex flex-wrap gap-1">
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">django</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">drf</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">python</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">rest framework</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">sqlite</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">postgresql</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">jwt</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">vanilla</span>
+</div>
+</article>
+<!-- Blueprint Card 2 -->
+<article class="bg-white border border-slate-200 rounded p-4 shadow-2xs hover:border-slate-400 transition-colors">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xs font-bold text-slate-900">FastAPI + Next.js (Fullstack App)</h3>
+</div>
+<p class="text-xs text-slate-600 mb-3 leading-relaxed">
+            High-performance async Python API backend paired with Next.js 14+ App Router, Tailwind CSS, and TypeScript.
+          </p>
+<div class="flex flex-wrap gap-1">
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">fastapi</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">nextjs</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">tailwind</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">python</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">typescript</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">async</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">pydantic</span>
+</div>
+</article>
+<!-- Blueprint Card 3 -->
+<article class="bg-white border border-slate-200 rounded p-4 shadow-2xs hover:border-slate-400 transition-colors">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xs font-bold text-slate-900">Node.js (Express / TypeScript) + Postgres</h3>
+</div>
+<p class="text-xs text-slate-600 mb-3 leading-relaxed">
+            Enterprise-grade 3-tier Node.js API with Prisma ORM, PostgreSQL, Zod validation, and React frontend.
+          </p>
+<div class="flex flex-wrap gap-1">
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">node</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">nodejs</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">express</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">typescript</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">postgres</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">prisma</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">zod</span>
+</div>
+</article>
+<!-- Blueprint Card 4 -->
+<article class="bg-white border border-slate-200 rounded p-4 shadow-2xs hover:border-slate-400 transition-colors">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xs font-bold text-slate-900">React.js (Vite) + Tailwind + Shadcn/UI</h3>
+</div>
+<p class="text-xs text-slate-600 mb-3 leading-relaxed">
+            Production frontend architecture strictly using React.js (Vite), JavaScript ES6+ (no TypeScript), Tailwind CSS, Shadcn/UI.
+          </p>
+<div class="flex flex-wrap gap-1">
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">react</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">vite</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">tailwind</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">shadcn</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">axios</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">tanstack</span>
+<span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">zod</span>
+</div>
+</article>
+</div>
+</div>
+</section>
+<!-- END: BlueprintsSection -->
+<!-- BEGIN: MainFooter -->
+<footer class="border-t border-slate-200 bg-white px-6 py-2.5 text-xs text-slate-500 font-mono flex items-center justify-between mt-auto" data-purpose="status-bar">
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-slate-800 font-medium text-[11px]">Daemon Running (Port 8000)</span>
+</div>
+<span>•</span>
+<span class="text-[11px]">Active Spec: <strong class="text-slate-900">PulseDesk</strong></span>
+<span>•</span>
+<span class="text-[11px]">Output: <code class="text-slate-700">./dist/pulsedesk-spec.zip</code></span>
+</div>
+<div class="flex items-center space-x-4 text-[11px]">
+<span>Memory: 114MB / 1.0GB</span>
+<span>•</span>
+<span>AgentForge Engine v2.0-prod</span>
+</div>
+</footer>
+<!-- END: MainFooter -->
+</body></html>

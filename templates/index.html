@@ -1,0 +1,933 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>AgentForge v2.0 - Autonomous Spec Engine</title>
+  <meta name="description" content="Paste your project scope. Define your exact tech stack. AgentForge synthesizes AGENT.md, ARCHITECTURE.md, SETUP.md, SKILLS.md, and API_SETUP.md — packaged as a root ZIP ready for execution.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⬛</text></svg>">
+
+  <!-- Google Fonts: Saira & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Tailwind CSS CDN with forms and container queries -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <!-- Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Saira', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            forge: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Markdown & Code Highlighting & JSZip -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- PDF.js for 100% full-text client-side extraction from uploaded PDFs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window['pdfjs-dist/build/pdf']) {
+      window.pdfjsLib = window['pdfjs-dist/build/pdf'];
+    }
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+
+  <style>
+    /* Prevent any unwanted horizontal window blowout */
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    /* Compact engineering-grade scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    body {
+      font-family: 'Saira', sans-serif;
+      background-color: #ffffff;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+    .font-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Markdown rendered styling inside viewer */
+    .markdown-rendered h1,
+    .markdown-rendered h2,
+    .markdown-rendered h3,
+    .markdown-rendered h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      color: #0f172a;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 4px;
+      margin-top: 14px;
+      margin-bottom: 8px;
+    }
+    .markdown-rendered h1 { font-size: 13px; }
+    .markdown-rendered h2 { font-size: 12px; }
+    .markdown-rendered h3 { font-size: 11px; }
+    .markdown-rendered h4 { font-size: 11px; }
+    .markdown-rendered p {
+      color: #334155;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+    .markdown-rendered ul,
+    .markdown-rendered ol {
+      padding-left: 18px;
+      margin-bottom: 10px;
+      color: #334155;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .markdown-rendered ul { list-style-type: disc; }
+    .markdown-rendered ol { list-style-type: decimal; }
+    .markdown-rendered li { margin-bottom: 3px; }
+    .markdown-rendered strong { color: #0f172a; font-weight: 600; }
+    .markdown-rendered code:not(pre code) {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid #e2e8f0;
+    }
+    .markdown-rendered pre,
+    #rawMarkdownContent {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+      border: 1px solid #e2e8f0 !important;
+      padding: 12px 14px !important;
+      border-radius: 6px !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 11px !important;
+      overflow-x: auto;
+      max-width: 100%;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .markdown-rendered pre code {
+      background: transparent !important;
+      color: inherit !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+    .markdown-rendered table {
+      width: 100%;
+      max-width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      margin-bottom: 12px;
+      border: 1px solid #e2e8f0;
+      display: block;
+      overflow-x: auto;
+    }
+    .markdown-rendered th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 600;
+      padding: 6px 10px;
+      border: 1px solid #e2e8f0;
+      text-align: left;
+    }
+    .markdown-rendered td {
+      padding: 6px 10px;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+    .markdown-rendered tr:hover td {
+      background: #f8fafc;
+    }
+
+    /* AI Thinking Terminal */
+    #thinkingTerminal {
+      display: none;
+      background: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: #94a3b8;
+      position: relative;
+      overflow: hidden;
+    }
+    .terminal-scan {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(56,189,248,0.7), transparent);
+      animation: scanAnim 2s linear infinite;
+    }
+    @keyframes scanAnim {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(120px); }
+    }
+    .think-line {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 3px;
+      line-height: 1.4;
+    }
+    .t-prefix {
+      color: #38bdf8;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .t-text {
+      color: #e2e8f0;
+    }
+    .think-cursor {
+      display: inline-block;
+      width: 5px;
+      height: 10px;
+      background: #38bdf8;
+      margin-left: 3px;
+      vertical-align: middle;
+      animation: cursorBlink 0.8s infinite;
+    }
+    @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* Toast Notification */
+    .toast-notice {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast-notice.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Tag chip delete button */
+    .tech-tag-chip button:hover {
+      color: #0f172a;
+    }
+
+    /* Drag & Drop zone active state */
+    #dropZoneBox.dragover {
+      background-color: #f1f5f9;
+      border-color: #0f172a;
+    }
+
+    @keyframes fieldHighlight {
+      0% { background-color: #ecfdf5; border-color: #10b981; }
+      100% { background-color: #ffffff; border-color: #cbd5e1; }
+    }
+    .highlight-populated {
+      animation: fieldHighlight 2s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-white text-slate-900 w-full overflow-x-hidden flex flex-col min-h-screen selection:bg-slate-900 selection:text-white">
+
+  <!-- BEGIN: MainHeader -->
+  <header class="border-b border-slate-200 bg-white sticky top-0 z-50 px-4 sm:px-6 py-2.5 flex items-center justify-between" data-purpose="top-navigation">
+    <div class="flex items-center space-x-3 sm:space-x-6">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-7 h-7 bg-slate-900 text-white rounded flex items-center justify-center font-bold text-xs shadow-sm">
+          [A]
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-sm tracking-tight text-slate-950">AgentForge</span>
+          <span class="text-[10px] bg-slate-100 border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-mono font-medium">v2.0</span>
+        </div>
+      </div>
+      <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
+      <!-- Live Engine Status Badge -->
+      <div id="authStatusBadge" class="flex items-center space-x-2 text-[11px] font-medium text-slate-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-emerald-700 font-mono tracking-tight text-[10px] uppercase">Engine Online</span>
+      </div>
+    </div>
+    <!-- Navigation Actions -->
+    <nav class="flex items-center space-x-3 sm:space-x-5 text-xs font-medium text-slate-600">
+      <a class="hover:text-slate-900 transition-colors hidden md:inline-block" href="javascript:void(0)" onclick="alert('AgentForge v2.0 - Autonomous AI Coding Specification Generator. Synthesizes AGENT.md, ARCHITECTURE.md, SETUP.md, and SKILLS.md.')">Documentation</a>
+      <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
+      <!-- Quick User Panel -->
+      <div class="flex items-center space-x-2 sm:space-x-2.5 sm:pl-2">
+        <div class="w-6 h-6 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-700">
+          DE
+        </div>
+        <span class="text-xs text-slate-800 font-medium font-mono hidden sm:inline">dev@agentforge.ai</span>
+      </div>
+    </nav>
+  </header>
+  <!-- END: MainHeader -->
+
+  <!-- BEGIN: HeroSection -->
+  <section class="border-b border-slate-200 bg-slate-50/60 py-6 sm:py-8 px-4 sm:px-6 text-center" data-purpose="hero-banner">
+    <div class="max-w-4xl mx-auto flex flex-col items-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-[10.5px] sm:text-[11px] font-mono font-medium text-slate-700 mb-3 shadow-2xs">
+        <span class="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
+        AUTONOMOUS SPEC ENGINE • AI CODING AGENT READY
+      </div>
+      <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-950">
+        Scope <span class="text-slate-400 font-normal">→</span> <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 bg-clip-text text-transparent">Production-Ready Agent Specs</span>
+      </h1>
+      <p class="mt-2.5 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+        Paste your project scope. Define your exact tech stack. AgentForge synthesizes <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">AGENT.md</code>, <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">ARCHITECTURE.md</code>, <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">SETUP.md</code>, and <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">API_SETUP.md</code> — packaged as a root ZIP ready for execution.
+      </p>
+    </div>
+  </section>
+  <!-- END: HeroSection -->
+
+  <!-- BEGIN: WorkstationStudio -->
+  <main class="flex-1 max-w-[1720px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6" data-purpose="dual-pane-studio">
+
+    <!-- Column 1: Project Input Form -->
+    <div class="col-span-1 lg:col-span-5 flex flex-col gap-4">
+      <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs flex flex-col gap-4">
+
+        <!-- Step Indicator & Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="flex items-center justify-center w-5 h-5 bg-blue-600 text-white rounded-full text-[10px] font-bold">1</span>
+            <h2 class="text-xs uppercase font-bold tracking-wider text-slate-900 font-mono">Project Input</h2>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono uppercase">Interactive Form</span>
+        </div>
+
+        <form id="scaffoldForm" class="flex flex-col gap-4">
+
+          <!-- 1. Scope Document Dropzone & AI Analysis Phase (FIRST) -->
+          <div class="border border-slate-200 rounded-lg p-3.5 bg-slate-50/60 flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span>1. Scope Document (Upload for Instant AI Extraction)</span>
+              </label>
+            </div>
+
+            <!-- File Dropzone -->
+            <label
+              for="fileUploadInput"
+              id="dropZoneBox"
+              class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-md p-4 bg-white flex flex-col items-center justify-center text-center cursor-pointer transition-all shadow-2xs group"
+            >
+              <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+              </div>
+              <span class="text-xs text-slate-800 font-medium">Drop scope file (.pdf, .txt, .md, .docx) or <span class="text-blue-600 underline font-semibold">browse</span></span>
+              <span class="text-[10px] text-slate-400 mt-0.5 font-mono">1st-place AI analysis extracts title &amp; tech stack automatically</span>
+              <input type="file" id="fileUploadInput" accept=".txt,.md,.markdown,.pdf,.doc,.docx,text/*" class="hidden" />
+            </label>
+
+            <!-- AI 1st-Place Analysis Status Banner -->
+            <div id="aiAnalysisStatus" class="transition-all">
+              <div class="flex items-center gap-2 text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded text-[11px] font-mono">
+                <span class="text-blue-500 font-bold">⚡</span>
+                <span>Drop a scope document to trigger 1st-place AI field extraction.</span>
+              </div>
+            </div>
+
+            <!-- Scope Content Textarea (Collapsible / Editable) -->
+            <div class="mt-1">
+              <div class="flex items-center justify-between mb-1">
+                <button type="button" id="toggleScopeEditorBtn" class="text-[10.5px] font-mono text-slate-500 hover:text-slate-800 flex items-center gap-1">
+                  <span>▸ View / Edit Raw Scope Text</span>
+                </button>
+                <div id="wordCountBadge" class="text-[10px] font-mono text-slate-400">
+                  0 words • UTF-8
+                </div>
+              </div>
+              <div id="scopeEditorContainer" class="hidden">
+                <textarea
+                  id="scopeContentText"
+                  class="w-full text-xs font-mono bg-white border border-slate-300 rounded p-2.5 text-slate-800 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none leading-normal"
+                  rows="5"
+                  placeholder="Paste your raw project scope document, PRD, or user stories here, or drag &amp; drop a file above..."
+                  required
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Project Title Field (Populated by AI) -->
+          <div id="projectTitleWrapper" class="transition-all">
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-xs font-semibold text-slate-800" for="projectTitle">2. Project Title</label>
+              <span id="titleSourceBadge" class="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded font-mono font-medium">Awaiting Scope</span>
+            </div>
+            <input
+              class="w-full text-xs font-mono bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none transition"
+              id="projectTitle"
+              placeholder="e.g. Healthcare Patient Portal (upload a scope doc to auto-extract)"
+              type="text"
+              value=""
+              required
+            />
+          </div>
+
+          <!-- 3. Categorized Tech Stack Breakdown & Tags (Populated by AI) -->
+          <div id="techStackSection" class="transition-all flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-800">3. Categorized Technology Stack</label>
+              <span id="techSourceBadge" class="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded font-mono font-medium">Awaiting Scope</span>
+            </div>
+
+            <!-- Dynamic Categorized Pill Breakdown Strip -->
+            <div id="categorizedTechStackView" class="p-2.5 bg-slate-50 border border-slate-200 rounded text-[11px] font-mono flex flex-col gap-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-slate-400 font-semibold text-[10px] uppercase w-16">Frontend:</span>
+                <span id="catFrontend" class="text-slate-500 font-medium italic">Awaiting scope upload</span>
+              </div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-slate-400 font-semibold text-[10px] uppercase w-16">Backend:</span>
+                <span id="catBackend" class="text-slate-500 font-medium italic">Awaiting scope upload</span>
+              </div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-slate-400 font-semibold text-[10px] uppercase w-16">Database:</span>
+                <span id="catDatabase" class="text-slate-500 font-medium italic">Awaiting scope upload</span>
+              </div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-slate-400 font-semibold text-[10px] uppercase w-16">Services:</span>
+                <span id="catServices" class="text-slate-500 font-medium italic">Awaiting scope upload</span>
+              </div>
+            </div>
+
+            <!-- Editable Tech Stack Tags Input with Autocomplete -->
+            <div class="relative mt-1">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[10.5px] text-slate-600 font-medium">Active Stack Tags (press Enter to add / click × to remove):</span>
+              </div>
+              <div
+                id="tagWrapper"
+                class="p-2 border border-slate-300 rounded bg-white flex flex-wrap gap-1.5 items-center min-h-[46px] cursor-text focus-within:ring-1 focus-within:ring-slate-900 focus-within:border-slate-900"
+              >
+                <!-- Populated dynamically by app.js -->
+                <input
+                  id="techTagInput"
+                  class="border-0 focus:ring-0 text-xs py-0.5 px-1 font-mono text-slate-600 placeholder-slate-400 min-w-[110px] flex-1 outline-none"
+                  placeholder="Upload scope to auto-populate or type here..."
+                  type="text"
+                  autocomplete="off"
+                />
+              </div>
+              <!-- Autocomplete Floating Dropdown -->
+              <div
+                id="techSuggestionsMenu"
+                class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto font-mono text-xs divide-y divide-slate-100"
+              ></div>
+            </div>
+          </div>
+
+          <!-- 4. Additional VIP Notes / Specific Directives (Optional) -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-xs font-semibold text-slate-800" for="customNotes">4. Additional VIP Notes / Specific Directives (Optional)</label>
+              <span class="text-[10px] text-slate-400 font-mono">User Directives</span>
+            </div>
+            <textarea
+              class="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded p-2.5 text-slate-800 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none leading-relaxed"
+              id="customNotes"
+              rows="2"
+              placeholder=""
+            ></textarea>
+          </div>
+
+          <!-- AI Thinking Terminal Animation -->
+          <div id="thinkingTerminal">
+            <div class="terminal-scan"></div>
+            <div class="flex items-center space-x-2 text-[10px] text-sky-400 uppercase tracking-wider mb-2 font-bold">
+              <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+              <span>Autonomous Agent Synthesis Engine</span>
+            </div>
+            <div id="thinkingLines" class="space-y-1"></div>
+          </div>
+
+          <!-- Primary Generation CTA -->
+          <button
+            id="submitGenerateBtn"
+            class="w-full bg-slate-900 hover:bg-black text-white text-xs font-semibold py-3 px-4 rounded-md shadow flex items-center justify-center gap-2 transition cursor-pointer"
+            type="submit"
+          >
+            <svg class="w-4 h-4 text-blue-400 fill-current" viewBox="0 0 20 20">
+              <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V14a1 1 0 11-2 0v-.586l-2.293-2.293a1 1 0 011.414-1.414L9 10.586V6a1 1 0 112 0v4.586l.879-.879a1 1 0 111.414 1.414L11 13.414z"></path>
+            </svg>
+            <span>Generate Scaffold &amp; Spec Files</span>
+          </button>
+
+        </form>
+
+      </div>
+    </div>
+
+    <!-- Column 2: Specification Studio -->
+    <div class="col-span-1 lg:col-span-7 flex flex-col gap-4 min-w-0">
+      <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs flex flex-col h-full min-w-0">
+
+        <!-- Studio Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="flex items-center justify-center w-5 h-5 bg-emerald-600 text-white rounded-full text-[10px] font-bold">2</span>
+            <h2 class="text-xs uppercase font-bold tracking-wider text-slate-900 font-mono">Specification Studio</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="resetStudioBtn" class="px-2 py-0.5 rounded text-[10.5px] font-mono text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 transition" title="Reset all fields and studio to blank state">
+              ↺ Reset
+            </button>
+            <span id="totalFilesBadge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> 0 ARTIFACTS
+            </span>
+          </div>
+        </div>
+
+        <!-- Synthesized Package Meta Card -->
+        <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-md flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span id="projectBannerTitle" class="text-xs font-bold text-slate-900">Awaiting Project Scope</span>
+              <span id="projectStatusPill" class="text-[10px] text-slate-600 font-mono bg-slate-200 px-1.5 rounded">No Active Spec</span>
+            </div>
+            <div id="projectStackTagsContainer" class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              <span class="text-[10px] font-mono text-slate-500">Stack:</span>
+              <span class="text-[10px] font-mono text-slate-400 italic">None</span>
+            </div>
+          </div>
+          <!-- Download / Action Buttons -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button
+              id="generateUiBtn"
+              type="button"
+              class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-[11px] font-mono font-medium flex items-center gap-1 shadow-2xs transition cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Synthesize UI</span>
+            </button>
+            <button
+              id="copyPromptActionBtn"
+              type="button"
+              class="px-2.5 py-1.5 bg-white border border-slate-300 hover:border-slate-400 rounded text-[11px] font-mono text-slate-700 flex items-center gap-1 shadow-2xs transition"
+            >
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+              <span>Copy Kickoff Prompt</span>
+            </button>
+            <!-- Download ZIP Dropdown -->
+            <div class="relative inline-block text-left" id="downloadZipDropdownContainer">
+              <button
+                id="downloadZipActionBtn"
+                type="button"
+                class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-[11px] font-mono font-medium text-white flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                title="Download Specifications as ZIP"
+              >
+                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+                <span>Download .ZIP ▾</span>
+              </button>
+              <div id="downloadZipMenu" class="hidden absolute right-0 mt-1.5 w-60 rounded-md shadow-xl bg-white border border-slate-200 ring-1 ring-black/5 z-50 divide-y divide-slate-100 font-sans animate-in fade-in zoom-in-95 duration-100">
+                <div class="py-1">
+                  <button type="button" id="downloadAllZipBtn" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center justify-between group transition">
+                    <span class="flex items-center gap-2">
+                      <span class="text-base">📦</span>
+                      <span>
+                        <span class="font-semibold block text-slate-800 group-hover:text-emerald-900">Full Project ZIP</span>
+                        <span class="text-[10px] text-slate-400 block">frontend/ + backend/ + SCOPE.md</span>
+                      </span>
+                    </span>
+                    <span class="text-[9px] bg-slate-100 group-hover:bg-emerald-100 text-slate-600 group-hover:text-emerald-700 font-mono font-bold px-1.5 py-0.5 rounded">All</span>
+                  </button>
+                </div>
+                <div class="py-1">
+                  <button type="button" id="downloadFrontendZipBtn" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-blue-50 hover:text-blue-800 flex items-center justify-between group transition">
+                    <span class="flex items-center gap-2">
+                      <span class="text-base">🎨</span>
+                      <span>
+                        <span class="font-semibold block text-slate-800 group-hover:text-blue-900">Frontend Specs ZIP</span>
+                        <span class="text-[10px] text-slate-400 block">frontend/ folder + UI Prototype</span>
+                      </span>
+                    </span>
+                    <span class="text-[9px] bg-blue-50 group-hover:bg-blue-100 text-blue-700 font-mono font-bold px-1.5 py-0.5 rounded">FE</span>
+                  </button>
+                  <button type="button" id="downloadBackendZipBtn" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-800 flex items-center justify-between group transition">
+                    <span class="flex items-center gap-2">
+                      <span class="text-base">⚙️</span>
+                      <span>
+                        <span class="font-semibold block text-slate-800 group-hover:text-amber-900">Backend Specs ZIP</span>
+                        <span class="text-[10px] text-slate-400 block">backend/ folder specifications</span>
+                      </span>
+                    </span>
+                    <span class="text-[9px] bg-amber-50 group-hover:bg-amber-100 text-amber-700 font-mono font-bold px-1.5 py-0.5 rounded">BE</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dual Split: File Explorer + Markdown Pane -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-12 border border-slate-200 rounded-md overflow-hidden flex-1 min-h-[520px]">
+
+          <!-- File Explorer (Sidebar) -->
+          <div class="col-span-1 md:col-span-4 bg-slate-50/70 border-b md:border-b-0 md:border-r border-slate-200 p-2.5 flex flex-col font-mono text-xs overflow-y-auto max-h-[720px]">
+            <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-1 mb-1 tracking-wider flex items-center justify-between">
+              <span>/ PROJECT-ROOT</span>
+              <span class="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.2 rounded font-mono font-medium">14 files</span>
+            </div>
+
+            <!-- FOLDER: frontend/ -->
+            <div class="mb-2">
+              <div class="flex items-center justify-between px-2 py-1 text-[11px] font-bold text-blue-800 bg-blue-50/60 rounded border border-blue-100/80 mb-1 cursor-default">
+                <span class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                  <span>frontend/</span>
+                </span>
+                <span class="text-[9px] bg-blue-100/70 text-blue-700 px-1 rounded font-normal font-sans">Client</span>
+              </div>
+              <div class="pl-2 space-y-0.5 border-l-2 border-blue-200/50 ml-2">
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded bg-blue-50 text-blue-900 border border-blue-200/60 font-semibold flex items-center justify-between" data-file="fe_agent" data-folder="frontend">
+                  <span class="flex items-center gap-1.5 truncate">
+                    <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                    <span class="truncate">AGENT.md</span>
+                  </span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"></span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="fe_architecture" data-folder="frontend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">ARCHITECTURE.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="fe_setup" data-folder="frontend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">SETUP.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="fe_skills" data-folder="frontend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">SKILLS.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="fe_apisetup" data-folder="frontend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">API_SETUP.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="fe_prompt" data-folder="frontend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">INITIAL_PROMPT.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-indigo-700 hover:bg-indigo-50/70 border border-transparent hover:border-indigo-100 flex items-center justify-between truncate" data-file="fe_ui" data-folder="frontend">
+                  <span class="flex items-center gap-1.5 truncate">
+                    <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path></svg>
+                    <span class="font-bold truncate">UI_PROTOTYPE.html</span>
+                  </span>
+                  <span class="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded uppercase font-mono font-semibold shrink-0">Live UI</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- FOLDER: backend/ -->
+            <div class="mb-2">
+              <div class="flex items-center justify-between px-2 py-1 text-[11px] font-bold text-amber-900 bg-amber-50/60 rounded border border-amber-100/80 mb-1 cursor-default">
+                <span class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-amber-600" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                  <span>backend/</span>
+                </span>
+                <span class="text-[9px] bg-amber-100/70 text-amber-800 px-1 rounded font-normal font-sans">Server</span>
+              </div>
+              <div class="pl-2 space-y-0.5 border-l-2 border-amber-200/50 ml-2">
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="be_agent" data-folder="backend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">AGENT.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="be_architecture" data-folder="backend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">ARCHITECTURE.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="be_setup" data-folder="backend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">SETUP.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="be_skills" data-folder="backend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">SKILLS.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="be_apisetup" data-folder="backend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">API_SETUP.md</span>
+                </button>
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="be_prompt" data-folder="backend">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">INITIAL_PROMPT.md</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- SHARED / ROOT FILES -->
+            <div class="mb-2">
+              <div class="flex items-center justify-between px-2 py-1 text-[11px] font-bold text-slate-600 bg-slate-100/80 rounded border border-slate-200/80 mb-1 cursor-default">
+                <span class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-slate-500" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path></svg>
+                  <span>shared / root</span>
+                </span>
+                <span class="text-[9px] bg-slate-200/60 text-slate-600 px-1 rounded font-normal font-sans">Scope</span>
+              </div>
+              <div class="pl-2 space-y-0.5 border-l-2 border-slate-200 ml-2">
+                <button type="button" class="file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate" data-file="scope" data-folder="root">
+                  <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                  <span class="truncate">SCOPE.md</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-auto pt-3 border-t border-slate-200">
+              <div id="specStatusDisplay" class="text-[10px] text-slate-400">Status: Uninitialized</div>
+              <div id="specShaDisplay" class="text-[10px] text-slate-400 font-mono">SHA: —</div>
+            </div>
+          </div>
+
+          <!-- Document Viewer Header & Content (Markdown Pane / UI Sandbox) -->
+          <div class="col-span-1 md:col-span-8 flex flex-col bg-white min-w-0">
+            <!-- Tab Controls -->
+            <div class="flex flex-wrap gap-2 items-center justify-between border-b border-slate-200 px-4 py-2 bg-slate-50/40">
+              <div class="flex items-center gap-2">
+                <span id="currentViewerFilename" class="text-xs font-mono font-bold text-slate-800">AGENT.md</span>
+                <span id="currentViewerFilesize" class="text-[10px] font-mono text-slate-400">14.8 KB</span>
+              </div>
+              <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                <button type="button" id="launchToolbarBigWindowBtn" class="hidden text-[11px] font-mono px-2.5 py-0.5 rounded bg-indigo-600 hover:bg-indigo-700 font-bold text-white shadow-2xs transition items-center gap-1 cursor-pointer">
+                  <svg class="w-3 h-3 text-white inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                  <span>⛶ Big Window</span>
+                </button>
+                <button type="button" id="openExternalUiBtn" title="Open in new window" class="hidden text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition items-center gap-1">
+                  <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                  <span>New Tab</span>
+                </button>
+                <button type="button" id="modePreviewBtn" class="text-[11px] font-mono px-2 py-0.5 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 transition">Preview</button>
+                <button type="button" id="modeRawBtn" class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition">Raw</button>
+                <button type="button" id="copyCurrentFileBtn" class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition">Copy</button>
+                <button type="button" id="downloadCurrentFileBtn" class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition">↓ .md</button>
+              </div>
+            </div>
+
+            <!-- Formatted Markdown Content / Raw Code / UI Prototype Sandbox -->
+            <div class="p-4 sm:p-5 overflow-y-auto max-h-[580px] flex-1 min-w-0">
+              <div id="renderedMarkdownContent" class="markdown-rendered space-y-4 min-w-0"></div>
+              <pre id="rawMarkdownContent" class="hidden bg-slate-50 text-slate-800 border border-slate-200 p-4 rounded-md font-mono text-xs overflow-x-auto leading-relaxed whitespace-pre-wrap"></pre>
+              
+              <!-- UI Prototype Launchpad Card (Unconstrained Big Window) -->
+              <div id="uiPrototypeContainer" class="hidden flex flex-col gap-4 w-full">
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 sm:p-5 flex flex-col gap-3.5 shadow-2xs">
+                  <div class="flex items-center justify-between flex-wrap gap-2.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <h3 class="text-xs font-bold font-mono text-slate-900 tracking-wide uppercase">Interactive UI Prototype</h3>
+                      <span class="text-[10px] font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded font-medium">Standalone SPA</span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        id="launchBigWindowBtn"
+                        class="px-3.5 py-1.5 bg-slate-900 hover:bg-black text-white rounded text-xs font-mono font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                      >
+                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        <span>Open Big Window View</span>
+                      </button>
+                      <button
+                        type="button"
+                        id="launchExternalTabBtn"
+                        class="px-3 py-1.5 bg-white border border-slate-300 hover:border-slate-400 text-slate-700 rounded text-xs font-mono font-medium flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                      >
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <span>New Tab</span>
+                      </button>
+                    </div>
+                  </div>
+                  <p class="text-xs text-slate-600 leading-relaxed">
+                    View this application in the full-scale <strong>Big Window Canvas</strong> with real device viewports (Desktop, Laptop, Tablet, Mobile) and live interactivity, or expand the embedded preview below.
+                  </p>
+                </div>
+
+                <!-- Collapsible Inline Frame Toggle -->
+                <div class="flex items-center justify-between border-t border-slate-100 pt-3">
+                  <span class="text-[11px] font-mono text-slate-500">Embedded preview within studio:</span>
+                  <button type="button" id="toggleInlineFrameBtn" class="text-[11px] font-mono text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer">
+                    Show Embedded View ↓
+                  </button>
+                </div>
+
+                <!-- Embedded Preview Container -->
+                <div id="inlineFrameContainer" class="hidden transition-all duration-300 border border-slate-300 rounded shadow-xs bg-white overflow-hidden">
+                  <div class="px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                    <span>Embedded Sandbox Frame (Reduced Scale)</span>
+                    <button type="button" id="inlineExpandToBigBtn" class="text-indigo-600 hover:text-indigo-800 font-bold">⛶ Expand to Big Window</button>
+                  </div>
+                  <iframe id="uiPrototypeIframe" class="w-full h-[480px] border-0" sandbox="allow-scripts allow-forms allow-same-origin allow-modals"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+  <!-- END: WorkstationStudio -->
+
+  <!-- BEGIN: MainFooter -->
+  <footer class="border-t border-slate-200 bg-white px-4 sm:px-6 py-2.5 text-xs text-slate-500 font-mono flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mt-auto" data-purpose="status-bar">
+    <div class="flex items-center space-x-2 sm:space-x-4 flex-wrap gap-y-1">
+      <div class="flex items-center space-x-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-slate-800 font-medium text-[11px]">Daemon Running (Port 8000)</span>
+      </div>
+      <span class="hidden sm:inline">•</span>
+      <span class="text-[11px]">Active Spec: <strong id="footerActiveSpec" class="text-slate-900">None</strong></span>
+      <span class="hidden sm:inline">•</span>
+      <span class="text-[11px]">Output: <code id="footerOutputPath" class="text-slate-700">./dist/spec.zip</code></span>
+    </div>
+    <div class="flex items-center space-x-2 sm:space-x-4 text-[11px] flex-wrap">
+      <span>Memory: 114MB / 1.0GB</span>
+      <span>•</span>
+      <span>AgentForge Engine v2.0-prod</span>
+    </div>
+  </footer>
+  <!-- END: MainFooter -->
+
+  <!-- Fullscreen UI Prototype Big Window Canvas Modal -->
+  <div id="uiCanvasModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex flex-col p-2 sm:p-4 md:p-6 transition-all duration-200">
+    <div class="bg-white border border-slate-300 rounded-lg shadow-2xl w-full h-full flex flex-col overflow-hidden max-w-[1920px] mx-auto">
+      
+      <!-- Top Chrome Bar -->
+      <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-2 items-center justify-between font-mono text-xs">
+        <!-- Left: Status & Identity -->
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-6 h-6 rounded bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">
+            ⚡
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span id="canvasProjectTitle" class="font-bold text-slate-900 truncate">UI_PROTOTYPE.html</span>
+              <span class="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold uppercase">Interactive Preview</span>
+            </div>
+            <div class="text-[10px] text-slate-400">Sandboxed Environment • Zero Build Step Single-File SPA</div>
+          </div>
+        </div>
+
+        <!-- Center: Device Viewport Presets -->
+        <div class="flex items-center space-x-1 border border-slate-200 rounded p-0.5 bg-slate-200/60 overflow-x-auto max-w-full">
+          <button type="button" id="modalVpDesktopBtn" class="px-2.5 py-1 rounded text-[11px] font-mono font-bold bg-white text-slate-900 shadow-2xs transition cursor-pointer whitespace-nowrap">
+            🖥️ Desktop (100%)
+          </button>
+          <button type="button" id="modalVpLaptopBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap">
+            💻 Laptop (1280px)
+          </button>
+          <button type="button" id="modalVpTabletBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap">
+            📱 Tablet (768px)
+          </button>
+          <button type="button" id="modalVpMobileBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap">
+            📲 Mobile (390px)
+          </button>
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            id="modalOpenExternalBtn"
+            class="px-2.5 py-1 bg-white border border-slate-300 hover:border-slate-400 rounded text-[11px] font-mono text-slate-700 flex items-center gap-1 shadow-2xs transition cursor-pointer whitespace-nowrap"
+            title="Open in new browser tab"
+          >
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            <span>New Tab</span>
+          </button>
+          <button
+            type="button"
+            id="modalDownloadHtmlBtn"
+            class="px-2.5 py-1 bg-white border border-slate-300 hover:border-slate-400 rounded text-[11px] font-mono text-slate-700 flex items-center gap-1 shadow-2xs transition cursor-pointer whitespace-nowrap"
+          >
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span>Download .html</span>
+          </button>
+          <button
+            type="button"
+            id="closeUiCanvasModalBtn"
+            class="px-2.5 py-1 bg-slate-900 hover:bg-black text-white rounded text-[11px] font-mono font-medium flex items-center gap-1 transition cursor-pointer whitespace-nowrap"
+          >
+            <span>Close</span>
+            <span class="text-slate-400 font-bold ml-0.5">✕</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas Area with Centered Resizable Frame -->
+      <div class="flex-1 bg-slate-100/90 p-3 sm:p-5 flex items-center justify-center overflow-auto min-h-0">
+        <div id="modalIframeWrapper" class="w-full h-full max-w-full transition-all duration-300 bg-white rounded-md shadow-md border border-slate-300 overflow-hidden flex flex-col">
+          <iframe id="modalUiPrototypeIframe" class="w-full h-full border-0 bg-white flex-1" sandbox="allow-scripts allow-forms allow-same-origin allow-modals"></iframe>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toastNotice" class="toast-notice"></div>
+
+  <script src="{% static 'js/app.js' %}?v=2.1.0"></script>
+</body>
+</html>

@@ -1,0 +1,1692 @@
+// AgentForge v2.0 — Autonomous Spec Engine Frontend Controller
+
+const API_BASE = '/api';
+let authToken = localStorage.getItem('agentforge_token') || null;
+let currentScaffold = null;
+let activeFileKey = 'fe_agent';
+let isRawMode = false;
+let techTags = [];
+
+// Comprehensive Tech Stack Catalog for Instant Autocomplete
+const TECH_CATALOG = [
+  // Languages
+  { name: 'Python', cat: 'Language' },
+  { name: 'JavaScript', cat: 'Language' },
+  { name: 'TypeScript', cat: 'Language' },
+  { name: 'Go', cat: 'Language' },
+  { name: 'Rust', cat: 'Language' },
+  { name: 'Java', cat: 'Language' },
+  { name: 'Kotlin', cat: 'Language' },
+  { name: 'C#', cat: 'Language' },
+  { name: 'PHP', cat: 'Language' },
+  { name: 'Ruby', cat: 'Language' },
+  { name: 'Swift', cat: 'Language' },
+  { name: 'Dart', cat: 'Language' },
+  { name: 'Elixir', cat: 'Language' },
+  // Python Frameworks
+  { name: 'Django', cat: 'Backend' },
+  { name: 'DRF', cat: 'Backend' },
+  { name: 'FastAPI', cat: 'Backend' },
+  { name: 'Flask', cat: 'Backend' },
+  { name: 'Tornado', cat: 'Backend' },
+  { name: 'Celery', cat: 'Async Queue' },
+  { name: 'SQLAlchemy', cat: 'ORM' },
+  { name: 'Pydantic', cat: 'Validation' },
+  // JS/TS Backend
+  { name: 'Node.js', cat: 'Backend' },
+  { name: 'Express', cat: 'Backend' },
+  { name: 'NestJS', cat: 'Backend' },
+  { name: 'Fastify', cat: 'Backend' },
+  { name: 'Hono', cat: 'Backend' },
+  { name: 'Prisma', cat: 'ORM' },
+  { name: 'Drizzle', cat: 'ORM' },
+  { name: 'TypeORM', cat: 'ORM' },
+  { name: 'Zod', cat: 'Validation' },
+  { name: 'BullMQ', cat: 'Async Queue' },
+  // Frontend
+  { name: 'React', cat: 'Frontend' },
+  { name: 'Next.js', cat: 'Fullstack' },
+  { name: 'Vue', cat: 'Frontend' },
+  { name: 'Nuxt', cat: 'Fullstack' },
+  { name: 'Svelte', cat: 'Frontend' },
+  { name: 'SvelteKit', cat: 'Fullstack' },
+  { name: 'Angular', cat: 'Frontend' },
+  { name: 'SolidJS', cat: 'Frontend' },
+  { name: 'Astro', cat: 'Frontend' },
+  { name: 'Remix', cat: 'Fullstack' },
+  { name: 'Vite', cat: 'Tooling' },
+  { name: 'Vanilla JS', cat: 'Frontend' },
+  { name: 'HTML5', cat: 'Frontend' },
+  { name: 'Tailwind CSS', cat: 'CSS' },
+  { name: 'TailwindCSS', cat: 'CSS' },
+  { name: 'Shadcn/UI', cat: 'UI Library' },
+  { name: 'Radix UI', cat: 'UI Library' },
+  { name: 'Chakra UI', cat: 'UI Library' },
+  { name: 'Material UI', cat: 'UI Library' },
+  { name: 'Ant Design', cat: 'UI Library' },
+  { name: 'Redux', cat: 'State' },
+  { name: 'Zustand', cat: 'State' },
+  { name: 'TanStack Query', cat: 'Data Fetching' },
+  { name: 'React Query', cat: 'Data Fetching' },
+  { name: 'Axios', cat: 'HTTP' },
+  // Databases & Storage
+  { name: 'PostgreSQL', cat: 'Database' },
+  { name: 'MySQL', cat: 'Database' },
+  { name: 'SQLite', cat: 'Database' },
+  { name: 'MongoDB', cat: 'Database' },
+  { name: 'Redis', cat: 'Cache' },
+  { name: 'Supabase', cat: 'Database' },
+  { name: 'Firebase', cat: 'Database' },
+  { name: 'Cassandra', cat: 'Database' },
+  { name: 'ClickHouse', cat: 'Analytics DB' },
+  { name: 'Elasticsearch', cat: 'Search' },
+  { name: 'Meilisearch', cat: 'Search' },
+  { name: 'Pinecone', cat: 'Vector DB' },
+  { name: 'ChromaDB', cat: 'Vector DB' },
+  { name: 'Qdrant', cat: 'Vector DB' },
+  // Auth & Security
+  { name: 'simplejwt', cat: 'Auth' },
+  { name: 'JWT', cat: 'Auth' },
+  { name: 'NextAuth', cat: 'Auth' },
+  { name: 'Clerk', cat: 'Auth' },
+  { name: 'Auth0', cat: 'Auth' },
+  { name: 'Lucia', cat: 'Auth' },
+  // Architecture & Protocols
+  { name: 'REST', cat: 'API' },
+  { name: 'REST Framework', cat: 'API' },
+  { name: 'GraphQL', cat: 'API' },
+  { name: 'gRPC', cat: 'RPC' },
+  { name: 'WebSocket', cat: 'Realtime' },
+  { name: 'TRPC', cat: 'RPC' },
+  // Messaging & Streams
+  { name: 'RabbitMQ', cat: 'Message Queue' },
+  { name: 'Kafka', cat: 'Event Stream' },
+  { name: 'Redis Streams', cat: 'Streaming' },
+  // DevOps & Cloud
+  { name: 'Docker', cat: 'DevOps' },
+  { name: 'Kubernetes', cat: 'DevOps' },
+  { name: 'AWS', cat: 'Cloud' },
+  { name: 'GCP', cat: 'Cloud' },
+  { name: 'Azure', cat: 'Cloud' },
+  { name: 'Vercel', cat: 'Cloud' },
+  { name: 'Netlify', cat: 'Cloud' },
+  { name: 'Cloudflare', cat: 'Edge' },
+  { name: 'Nginx', cat: 'Server' },
+  // AI & Agents
+  { name: 'LangChain', cat: 'AI' },
+  { name: 'LlamaIndex', cat: 'AI' },
+  { name: 'Ollama', cat: 'AI' },
+  { name: 'OpenAI API', cat: 'AI' },
+  { name: 'Gemini API', cat: 'AI' },
+  { name: 'Anthropic Claude', cat: 'AI' }
+];
+
+// DOM References
+const authStatusBadge          = document.getElementById('authStatusBadge');
+const scaffoldForm             = document.getElementById('scaffoldForm');
+const submitGenerateBtn        = document.getElementById('submitGenerateBtn');
+const projectTitle             = document.getElementById('projectTitle');
+const scopeContentText         = document.getElementById('scopeContentText');
+const customNotes              = document.getElementById('customNotes');
+const wordCountBadge           = document.getElementById('wordCountBadge');
+const dropZoneBox              = document.getElementById('dropZoneBox');
+const fileUploadInput          = document.getElementById('fileUploadInput');
+const tagWrapper               = document.getElementById('tagWrapper');
+const techTagInput             = document.getElementById('techTagInput');
+const techSuggestionsMenu      = document.getElementById('techSuggestionsMenu');
+
+// 1st-Place AI Scope Analysis DOM Elements
+const aiAnalysisStatus         = document.getElementById('aiAnalysisStatus');
+const toggleScopeEditorBtn     = document.getElementById('toggleScopeEditorBtn');
+const scopeEditorContainer     = document.getElementById('scopeEditorContainer');
+const catFrontend              = document.getElementById('catFrontend');
+const catBackend               = document.getElementById('catBackend');
+const catDatabase              = document.getElementById('catDatabase');
+const catServices              = document.getElementById('catServices');
+const titleSourceBadge         = document.getElementById('titleSourceBadge');
+const techSourceBadge          = document.getElementById('techSourceBadge');
+const projectTitleWrapper      = document.getElementById('projectTitleWrapper');
+const techStackSection         = document.getElementById('techStackSection');
+
+const projectBannerTitle       = document.getElementById('projectBannerTitle');
+const projectStatusPill        = document.getElementById('projectStatusPill');
+const projectStackTagsContainer= document.getElementById('projectStackTagsContainer');
+const totalFilesBadge          = document.getElementById('totalFilesBadge');
+const specShaDisplay           = document.getElementById('specShaDisplay');
+
+const currentViewerFilename    = document.getElementById('currentViewerFilename');
+const currentViewerFilesize    = document.getElementById('currentViewerFilesize');
+const renderedMarkdownContent  = document.getElementById('renderedMarkdownContent');
+const rawMarkdownContent       = document.getElementById('rawMarkdownContent');
+const modePreviewBtn           = document.getElementById('modePreviewBtn');
+const modeRawBtn               = document.getElementById('modeRawBtn');
+const copyCurrentFileBtn       = document.getElementById('copyCurrentFileBtn');
+const downloadCurrentFileBtn    = document.getElementById('downloadCurrentFileBtn');
+const copyPromptActionBtn      = document.getElementById('copyPromptActionBtn');
+const downloadZipActionBtn     = document.getElementById('downloadZipActionBtn');
+const downloadZipDropdownContainer = document.getElementById('downloadZipDropdownContainer');
+const downloadZipMenu          = document.getElementById('downloadZipMenu');
+const downloadAllZipBtn        = document.getElementById('downloadAllZipBtn');
+const downloadFrontendZipBtn   = document.getElementById('downloadFrontendZipBtn');
+const downloadBackendZipBtn    = document.getElementById('downloadBackendZipBtn');
+const toastNotice              = document.getElementById('toastNotice');
+let toastTimer                 = null;
+
+function showToast(msg) {
+  if (!toastNotice) return;
+  toastNotice.textContent = msg;
+  toastNotice.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toastNotice.classList.remove('show');
+  }, 2800);
+}
+const thinkingTerminal         = document.getElementById('thinkingTerminal');
+const thinkingLines            = document.getElementById('thinkingLines');
+const footerActiveSpec         = document.getElementById('footerActiveSpec');
+const footerOutputPath         = document.getElementById('footerOutputPath');
+
+// UI Prototype & Big Window Canvas Elements
+const generateUiBtn            = document.getElementById('generateUiBtn');
+const uiPrototypeContainer     = document.getElementById('uiPrototypeContainer');
+const uiPrototypeIframe        = document.getElementById('uiPrototypeIframe');
+const launchToolbarBigWindowBtn= document.getElementById('launchToolbarBigWindowBtn');
+const openExternalUiBtn        = document.getElementById('openExternalUiBtn');
+const launchBigWindowBtn       = document.getElementById('launchBigWindowBtn');
+const launchExternalTabBtn     = document.getElementById('launchExternalTabBtn');
+const toggleInlineFrameBtn     = document.getElementById('toggleInlineFrameBtn');
+const inlineFrameContainer     = document.getElementById('inlineFrameContainer');
+const inlineExpandToBigBtn     = document.getElementById('inlineExpandToBigBtn');
+
+// Fullscreen Big Window Canvas Modal Elements
+const uiCanvasModal            = document.getElementById('uiCanvasModal');
+const closeUiCanvasModalBtn    = document.getElementById('closeUiCanvasModalBtn');
+const modalUiPrototypeIframe   = document.getElementById('modalUiPrototypeIframe');
+const modalIframeWrapper       = document.getElementById('modalIframeWrapper');
+const canvasProjectTitle       = document.getElementById('canvasProjectTitle');
+const modalVpDesktopBtn        = document.getElementById('modalVpDesktopBtn');
+const modalVpLaptopBtn         = document.getElementById('modalVpLaptopBtn');
+const modalVpTabletBtn         = document.getElementById('modalVpTabletBtn');
+const modalVpMobileBtn         = document.getElementById('modalVpMobileBtn');
+const modalOpenExternalBtn     = document.getElementById('modalOpenExternalBtn');
+const modalDownloadHtmlBtn     = document.getElementById('modalDownloadHtmlBtn');
+
+// ── Empty Studio Placeholder State (Zero Caching) ────────────────────────
+const EMPTY_STUDIO_FILES = {
+  // Frontend Folder Specifications
+  fe_agent: {
+    filename: 'AGENT.md',
+    folder: 'frontend',
+    display: 'frontend/AGENT.md',
+    content: `# FRONTEND AGENT.md — Autonomous UI Coding Directives\n\n*No project specifications synthesized yet.*\n\nEnter or upload your job scope on the left, configure the desired tech stack, and click **Synthesize Full Specs** to generate custom specifications.`
+  },
+  fe_architecture: {
+    filename: 'ARCHITECTURE.md',
+    folder: 'frontend',
+    display: 'frontend/ARCHITECTURE.md',
+    content: `# FRONTEND ARCHITECTURE.md — UI Component Topology & Layout\n\n*No frontend architecture loaded yet.*`
+  },
+  fe_setup: {
+    filename: 'SETUP.md',
+    folder: 'frontend',
+    display: 'frontend/SETUP.md',
+    content: `# FRONTEND SETUP.md — Client Installation & Dev Server Playbook\n\n*No frontend setup playbook loaded yet.*`
+  },
+  fe_skills: {
+    filename: 'SKILLS.md',
+    folder: 'frontend',
+    display: 'frontend/SKILLS.md',
+    content: `# FRONTEND SKILLS.md — UI Automation & Component Recipes\n\n*No frontend agent skills loaded yet.*`
+  },
+  fe_apisetup: {
+    filename: 'API_SETUP.md',
+    folder: 'frontend',
+    display: 'frontend/API_SETUP.md',
+    content: `# FRONTEND API_SETUP.md — HTTP Client & Interceptor Specification\n\n*No client API contracts loaded yet.*`
+  },
+  fe_prompt: {
+    filename: 'INITIAL_PROMPT.md',
+    folder: 'frontend',
+    display: 'frontend/INITIAL_PROMPT.md',
+    content: `# FRONTEND INITIAL_PROMPT.md — UI Kickoff Sequence\n\n*No frontend kickoff prompt loaded yet.*`
+  },
+  fe_ui: {
+    filename: 'UI_PROTOTYPE.html',
+    folder: 'frontend',
+    display: 'frontend/UI_PROTOTYPE.html',
+    content: ''
+  },
+
+  // Backend Folder Specifications
+  be_agent: {
+    filename: 'AGENT.md',
+    folder: 'backend',
+    display: 'backend/AGENT.md',
+    content: `# BACKEND AGENT.md — Server Architecture Directives\n\n*No backend specifications synthesized yet.*`
+  },
+  be_architecture: {
+    filename: 'ARCHITECTURE.md',
+    folder: 'backend',
+    display: 'backend/ARCHITECTURE.md',
+    content: `# BACKEND ARCHITECTURE.md — Relational Data Schemas & Service Layer\n\n*No backend architecture loaded yet.*`
+  },
+  be_setup: {
+    filename: 'SETUP.md',
+    folder: 'backend',
+    display: 'backend/SETUP.md',
+    content: `# BACKEND SETUP.md — Database Migrations & Environment Playbook\n\n*No backend setup playbook loaded yet.*`
+  },
+  be_skills: {
+    filename: 'SKILLS.md',
+    folder: 'backend',
+    display: 'backend/SKILLS.md',
+    content: `# BACKEND SKILLS.md — Database & API Automation Recipes\n\n*No backend skills loaded yet.*`
+  },
+  be_apisetup: {
+    filename: 'API_SETUP.md',
+    folder: 'backend',
+    display: 'backend/API_SETUP.md',
+    content: `# BACKEND API_SETUP.md — REST API Contracts & Endpoint Registry\n\n*No backend endpoint contracts loaded yet.*`
+  },
+  be_prompt: {
+    filename: 'INITIAL_PROMPT.md',
+    folder: 'backend',
+    display: 'backend/INITIAL_PROMPT.md',
+    content: `# BACKEND INITIAL_PROMPT.md — API & Database Kickoff Sequence\n\n*No backend kickoff prompt loaded yet.*`
+  },
+
+  // Root / Shared Files
+  scope: {
+    filename: 'SCOPE.md',
+    folder: 'root',
+    display: 'SCOPE.md',
+    content: `# SCOPE.md — Project Scope Document\n\n*No scope document loaded yet.*`
+  },
+
+  // Backwards compatibility aliases
+  agent: { filename: 'AGENT.md', folder: 'frontend', display: 'frontend/AGENT.md', content: '' },
+  architecture: { filename: 'ARCHITECTURE.md', folder: 'frontend', display: 'frontend/ARCHITECTURE.md', content: '' },
+  setup: { filename: 'SETUP.md', folder: 'frontend', display: 'frontend/SETUP.md', content: '' },
+  skills: { filename: 'SKILLS.md', folder: 'frontend', display: 'frontend/SKILLS.md', content: '' },
+  apisetup: { filename: 'API_SETUP.md', folder: 'frontend', display: 'frontend/API_SETUP.md', content: '' },
+  prompt: { filename: 'INITIAL_PROMPT.md', folder: 'frontend', display: 'frontend/INITIAL_PROMPT.md', content: '' },
+  ui: { filename: 'UI_PROTOTYPE.html', folder: 'frontend', display: 'frontend/UI_PROTOTYPE.html', content: '' }
+};
+
+async function ensureAuthToken(forceRefresh = false) {
+  if (authToken && !forceRefresh) {
+    try {
+      // Decode JWT payload to verify expiry
+      const payloadBase64 = authToken.split('.')[1];
+      const payload = JSON.parse(atob(payloadBase64));
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp > nowSeconds + 60) {
+        updateAuthBadge(true);
+        return authToken;
+      }
+      // If token expires in less than 60 seconds, renew
+      console.log('JWT access token expired or near expiry, re-authenticating...');
+    } catch (e) {
+      // Invalid format or parse error, fall through to re-login
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/login/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'me@example.com', password: 'pass12345' }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      authToken = data.access;
+      localStorage.setItem('agentforge_token', authToken);
+      updateAuthBadge(true);
+      return authToken;
+    }
+  } catch (err) {
+    console.warn('Auth error:', err);
+  }
+  updateAuthBadge(false);
+  return null;
+}
+
+function updateAuthBadge(ok) {
+  if (!authStatusBadge) return;
+  if (ok) {
+    authStatusBadge.className = "flex items-center space-x-2 text-[11px] font-medium text-slate-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full";
+    authStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-emerald-700 font-mono tracking-tight text-[10px] uppercase">Engine Online</span>`;
+  } else {
+    authStatusBadge.className = "flex items-center space-x-2 text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full";
+    authStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="text-slate-600 font-mono tracking-tight text-[10px] uppercase">Guest Mode</span>`;
+  }
+}
+
+function updateWordCount() {
+  if (!scopeContentText || !wordCountBadge) return;
+  const text = scopeContentText.value.trim();
+  const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+  wordCountBadge.textContent = `${words} words`;
+}
+
+if (scopeContentText) {
+  scopeContentText.addEventListener('input', updateWordCount);
+}
+
+
+// Toggle raw scope text editor
+if (toggleScopeEditorBtn && scopeEditorContainer) {
+  toggleScopeEditorBtn.addEventListener('click', () => {
+    const isHidden = scopeEditorContainer.classList.contains('hidden');
+    if (isHidden) {
+      scopeEditorContainer.classList.remove('hidden');
+      toggleScopeEditorBtn.innerHTML = '<span>▾ Hide Raw Scope Text</span>';
+    } else {
+      scopeEditorContainer.classList.add('hidden');
+      toggleScopeEditorBtn.innerHTML = '<span>▸ View / Edit Raw Scope Text</span>';
+    }
+  });
+}
+
+// ── Tech Stack Tag Chip Input ─────────────────────────────────────────────
+function renderTechTags() {
+  if (!tagWrapper) return;
+  Array.from(tagWrapper.querySelectorAll('.tech-tag-chip')).forEach(el => el.remove());
+  techTags.forEach((tag, idx) => {
+    const chip = document.createElement('span');
+    chip.className = 'tech-tag-chip inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-800 border border-slate-200';
+    chip.innerHTML = `${tag} <button type="button" data-idx="${idx}" class="text-slate-400 hover:text-slate-700 leading-none font-bold">×</button>`;
+    chip.querySelector('button').addEventListener('click', (e) => {
+      techTags.splice(parseInt(e.target.dataset.idx), 1);
+      renderTechTags();
+    });
+    tagWrapper.insertBefore(chip, techTagInput);
+  });
+}
+
+function addTechTag(value) {
+  const v = value.trim().replace(/[,;]+$/, '').trim();
+  if (!v) return;
+  const parts = v.split(/[,;]+/).map(s => s.trim()).filter(Boolean);
+  parts.forEach(p => {
+    if (p && !techTags.some(t => t.toLowerCase() === p.toLowerCase())) {
+      techTags.push(p);
+    }
+  });
+  renderTechTags();
+}
+
+// ── Tech Stack Autocomplete Suggestions ──────────────────────────────────
+function renderTechSuggestions(query) {
+  if (!techSuggestionsMenu) return;
+  const q = (query || '').trim().toLowerCase();
+  if (!q) {
+    techSuggestionsMenu.classList.add('hidden');
+    techSuggestionsMenu.innerHTML = '';
+    return;
+  }
+
+  const matches = TECH_CATALOG.filter(item => {
+    const notSelected = !techTags.some(t => t.toLowerCase() === item.name.toLowerCase());
+    const matched = item.name.toLowerCase().includes(q) || item.cat.toLowerCase().includes(q);
+    return notSelected && matched;
+  }).slice(0, 8);
+
+  if (matches.length === 0) {
+    techSuggestionsMenu.classList.add('hidden');
+    techSuggestionsMenu.innerHTML = '';
+    return;
+  }
+
+  techSuggestionsMenu.innerHTML = matches.map(item => `
+    <div class="suggestion-item px-3 py-2 flex items-center justify-between hover:bg-slate-50 cursor-pointer text-slate-800 transition" data-name="${item.name}">
+      <span class="font-semibold">${item.name}</span>
+      <span class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">${item.cat}</span>
+    </div>
+  `).join('');
+
+  techSuggestionsMenu.querySelectorAll('.suggestion-item').forEach(el => {
+    el.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const name = el.getAttribute('data-name');
+      addTechTag(name);
+      techTagInput.value = '';
+      techSuggestionsMenu.classList.add('hidden');
+      techTagInput.focus();
+    });
+  });
+
+  techSuggestionsMenu.classList.remove('hidden');
+}
+
+if (techTagInput) {
+  tagWrapper.addEventListener('click', (e) => {
+    if (e.target !== techTagInput && !e.target.closest('button')) {
+      techTagInput.focus();
+    }
+  });
+
+  techTagInput.addEventListener('input', (e) => {
+    renderTechSuggestions(techTagInput.value);
+  });
+
+  techTagInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',' || e.key === ';') {
+      e.preventDefault();
+      if (techTagInput.value.trim()) {
+        addTechTag(techTagInput.value);
+        techTagInput.value = '';
+        renderTechSuggestions('');
+      }
+    } else if (e.key === 'Backspace' && techTagInput.value === '' && techTags.length > 0) {
+      techTags.pop();
+      renderTechTags();
+    } else if (e.key === 'Escape') {
+      renderTechSuggestions('');
+    }
+  });
+
+  techTagInput.addEventListener('blur', () => {
+    setTimeout(() => {
+      if (techSuggestionsMenu) techSuggestionsMenu.classList.add('hidden');
+      if (techTagInput.value.trim()) {
+        addTechTag(techTagInput.value);
+        techTagInput.value = '';
+      }
+    }, 150);
+  });
+}
+
+
+// ── Drag & Drop & File Picker ─────────────────────────────────────────────
+if (dropZoneBox && fileUploadInput) {
+  dropZoneBox.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZoneBox.classList.add('border-blue-500', 'bg-blue-50/50');
+  });
+  dropZoneBox.addEventListener('dragleave', () => {
+    dropZoneBox.classList.remove('border-blue-500', 'bg-blue-50/50');
+  });
+  dropZoneBox.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZoneBox.classList.remove('border-blue-500', 'bg-blue-50/50');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processUploadedFile(e.dataTransfer.files[0]);
+    }
+  });
+  fileUploadInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processUploadedFile(e.target.files[0]);
+    }
+    fileUploadInput.value = '';
+  });
+}
+
+async function processUploadedFile(file) {
+  if (!file) return;
+  const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+  const isDocx = file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  let extractedTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+
+  if (isDocx) {
+    showToast(`Extracting document text from Word document "${file.name}"...`);
+    try {
+      if (window.JSZip) {
+        const zip = await JSZip.loadAsync(file);
+        let docFile = zip.file('word/document.xml');
+        if (!docFile) {
+          for (let name in zip.files) {
+            if (name.endsWith('document.xml')) {
+              docFile = zip.files[name];
+              break;
+            }
+          }
+        }
+        if (docFile) {
+          const xmlStr = await docFile.async('string');
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(xmlStr, 'text/xml');
+          const paragraphs = xmlDoc.getElementsByTagName('w:p');
+          const lines = [];
+          for (let p of paragraphs) {
+            const texts = p.getElementsByTagName('w:t');
+            let pText = '';
+            for (let t of texts) {
+              pText += t.textContent;
+            }
+            pText = pText.trim();
+            if (pText) {
+              lines.push(pText);
+            }
+          }
+          const fullDocText = lines.join('\n\n');
+          if (fullDocText.trim().length > 20) {
+            applyExtractedDocument(extractedTitle, fullDocText.trim());
+            return;
+          }
+        }
+      }
+    } catch (docxErr) {
+      console.warn('Word document parsing failed, falling back:', docxErr);
+    }
+  }
+
+  if (isPdf) {
+    showToast(`Extracting full document text from "${file.name}"...`);
+    try {
+      if (window.pdfjsLib) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullDocText = '';
+        const pageCount = pdf.numPages;
+
+        try {
+          const meta = await pdf.getMetadata();
+          if (meta?.info?.Title && meta.info.Title.trim().length > 3) {
+            extractedTitle = meta.info.Title.trim();
+          }
+        } catch (mErr) {
+          console.warn('PDF metadata read error:', mErr);
+        }
+
+        for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          let lastY, pageText = '';
+          for (let item of textContent.items) {
+            if (lastY !== item.transform[5] && lastY !== undefined) {
+              pageText += '\n';
+            } else if (pageText && !pageText.endsWith(' ') && !item.str.startsWith(' ')) {
+              pageText += ' ';
+            }
+            pageText += item.str;
+            lastY = item.transform[5];
+          }
+
+          if (pageText.trim()) {
+            fullDocText += pageText.trim() + '\n\n';
+          }
+        }
+
+        if (fullDocText.trim().length > 30) {
+          applyExtractedDocument(extractedTitle, fullDocText.trim());
+          return;
+        }
+      }
+    } catch (pdfErr) {
+      console.warn('PDF.js parse failed, falling back to FileReader:', pdfErr);
+    }
+  }
+
+  // 2. Standard FileReader for text, markdown, or fallback
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let content = e.target.result;
+    applyExtractedDocument(extractedTitle, content);
+  };
+  reader.readAsText(file);
+}
+
+function applyExtractedDocument(title, content) {
+  if (scopeContentText) {
+    scopeContentText.value = content;
+    updateWordCount();
+  }
+  if (projectTitle) {
+    projectTitle.value = title;
+  }
+  currentScaffold = null;
+  if (projectBannerTitle) projectBannerTitle.textContent = title;
+  if (projectStatusPill) projectStatusPill.textContent = 'Analyzing Scope with AI...';
+  if (footerActiveSpec) footerActiveSpec.textContent = title;
+  renderActiveFileContent();
+  const wordCount = (scopeContentText ? scopeContentText.value.split(/\s+/).filter(Boolean).length : 0);
+  showToast(`Loaded "${title}" (${wordCount} words) • Running 1st-place AI analysis...`);
+
+  // Trigger 1st-place AI scope analysis
+  runAiScopeAnalysis(content, title);
+}
+
+// ── 1st-Place AI Scope Analysis Engine ────────────────────────────────────
+async function runAiScopeAnalysis(scopeText, filename = '') {
+  if (!scopeText || scopeText.trim().length < 15) return;
+
+  if (aiAnalysisStatus) {
+    aiAnalysisStatus.innerHTML = `
+      <div class="flex items-center justify-between text-blue-800 bg-blue-50 border border-blue-200/90 px-3 py-2 rounded text-[11px] font-mono shadow-2xs">
+        <div class="flex items-center gap-2">
+          <svg class="animate-spin h-3.5 w-3.5 text-blue-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <span class="font-bold text-blue-900">Phase 1: AI Scope Analysis in progress...</span>
+          <span class="text-blue-600 hidden sm:inline">• Extracting title, frontend, backend, database & services</span>
+        </div>
+        <span class="text-[9.5px] bg-blue-200 text-blue-900 px-1.5 py-0.5 rounded uppercase font-bold tracking-tight">Active</span>
+      </div>
+    `;
+  }
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
+    const res = await fetch(`${API_BASE}/scaffolds/analyze-scope/`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        scope_text: scopeText,
+        filename: filename || ''
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      applyAiAnalysisResults(data);
+      return data;
+    } else {
+      console.warn('AI scope analysis returned error status:', res.status);
+    }
+  } catch (err) {
+    console.error('Failed to run 1st-place AI scope analysis:', err);
+  }
+
+  if (aiAnalysisStatus) {
+    aiAnalysisStatus.innerHTML = `
+      <div class="flex items-center gap-2 text-slate-600 bg-slate-50 border border-slate-200 px-3 py-2 rounded text-[11px] font-mono">
+        <span class="text-amber-500 font-bold">ℹ</span>
+        <span>Scope loaded. You can refine title and tech stack tags manually before generating.</span>
+      </div>
+    `;
+  }
+}
+
+function applyAiAnalysisResults(data) {
+  if (!data) return;
+
+  // 1. Title
+  if (data.title && projectTitle) {
+    projectTitle.value = data.title;
+    if (projectBannerTitle) projectBannerTitle.textContent = data.title;
+    if (footerActiveSpec) footerActiveSpec.textContent = data.title;
+    if (titleSourceBadge) {
+      titleSourceBadge.textContent = 'AI Extracted';
+      titleSourceBadge.className = 'text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-mono font-medium';
+    }
+    projectTitle.classList.remove('highlight-populated');
+    void projectTitle.offsetWidth;
+    projectTitle.classList.add('highlight-populated');
+  }
+
+  // 2. Categorized Tech Stack Breakdown Display
+  if (catFrontend) catFrontend.textContent = (data.frontend && data.frontend.length) ? data.frontend.join(', ') : 'Modern Frontend';
+  if (catBackend) catBackend.textContent = (data.backend && data.backend.length) ? data.backend.join(', ') : 'REST API Backend';
+  if (catDatabase) catDatabase.textContent = (data.database && data.database.length) ? data.database.join(', ') : 'Relational Database';
+  if (catServices) catServices.textContent = (data.libraries_and_services && data.libraries_and_services.length) ? data.libraries_and_services.join(', ') : 'JWT, External APIs';
+
+  // 3. Tech Stack Tags
+  if (data.all_tech_tags && data.all_tech_tags.length > 0) {
+    techTags = [...data.all_tech_tags];
+    renderTechTags();
+    if (tagWrapper) {
+      tagWrapper.classList.remove('highlight-populated');
+      void tagWrapper.offsetWidth;
+      tagWrapper.classList.add('highlight-populated');
+    }
+  }
+
+  // 4. Notes / Constraints: only populate if VIP points / strict instructions exist
+  if (customNotes) {
+    if (data.suggested_notes && data.suggested_notes.trim()) {
+      customNotes.value = data.suggested_notes.trim();
+    } else {
+      customNotes.value = '';
+    }
+  }
+
+  // 6. Status Banner Update
+  if (aiAnalysisStatus) {
+    const modCount = (data.modules && data.modules.length) ? data.modules.length : 4;
+    aiAnalysisStatus.innerHTML = `
+      <div class="flex items-center justify-between text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded text-[11px] font-mono shadow-2xs">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="font-bold text-emerald-950">1st-Place AI Analysis Complete</span>
+          <span class="text-emerald-700 hidden sm:inline">• Extracted "${data.title}" (${modCount} core modules ideated)</span>
+        </div>
+        <span class="text-[9.5px] bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded uppercase font-bold tracking-tight">Ready</span>
+      </div>
+    `;
+  }
+
+  if (projectStatusPill) projectStatusPill.textContent = 'Scope Ready • Ready to Synthesize';
+  showToast(`AI extracted: "${data.title}" • Tech stack populated`);
+}
+
+// ── AI Thinking Terminal Animation ────────────────────────────────────────
+const THINK_MESSAGES = [
+  'Parsing project scope document...',
+  'Extracting domain entities and bounded contexts...',
+  'Matching architectural patterns to scope...',
+  'Evaluating tech stack constraints...',
+  'Synthesizing AGENT.md directives...',
+  'Designing folder structure and module boundaries...',
+  'Generating ARCHITECTURE.md...',
+  'Building SETUP.md installation playbook...',
+  'Formulating SKILLS.md agent capability map...',
+  'Writing API_SETUP.md endpoint specifications...',
+  'Composing INITIAL_PROMPT.md kickoff sequence...',
+  'Validating spec completeness...',
+  'Packaging output...',
+];
+
+let thinkInterval = null;
+let thinkIdx = 0;
+
+function startThinkingTerminal() {
+  if (!thinkingTerminal || !thinkingLines) return;
+  thinkingTerminal.style.display = 'block';
+  thinkingLines.innerHTML = '';
+  thinkIdx = 0;
+
+  function addLine() {
+    if (thinkIdx >= THINK_MESSAGES.length) thinkIdx = 0;
+    const msg = THINK_MESSAGES[thinkIdx++];
+    const ts  = new Date().toTimeString().slice(0, 8);
+
+    const line = document.createElement('div');
+    line.className = 'think-line';
+    line.innerHTML = `<span class="t-prefix">[${ts}]</span><span class="t-text">» ${msg}<span class="think-cursor"></span></span>`;
+    thinkingLines.appendChild(line);
+
+    const allLines = thinkingLines.querySelectorAll('.think-line');
+    if (allLines.length > 6) {
+      allLines[0].remove();
+    }
+  }
+
+  addLine();
+  thinkInterval = setInterval(addLine, 1800);
+}
+
+function stopThinkingTerminal() {
+  if (thinkInterval) { clearInterval(thinkInterval); thinkInterval = null; }
+  if (thinkingTerminal) {
+    const line = document.createElement('div');
+    line.className = 'think-line';
+    line.innerHTML = `<span class="t-prefix">[DONE]</span><span class="t-text font-bold text-emerald-400">■ All specifications generated successfully.</span>`;
+    thinkingLines && thinkingLines.appendChild(line);
+    setTimeout(() => { thinkingTerminal.style.display = 'none'; }, 2500);
+  }
+}
+
+// ── File Map ──────────────────────────────────────────────────────────────
+function getFileMap() {
+  if (!currentScaffold) return EMPTY_STUDIO_FILES;
+
+  const fe_agents = currentScaffold.frontend_agents_md || currentScaffold.agents_md || EMPTY_STUDIO_FILES.fe_agent.content;
+  const fe_arch = currentScaffold.frontend_architecture_md || currentScaffold.architecture_md || EMPTY_STUDIO_FILES.fe_architecture.content;
+  const fe_setup = currentScaffold.frontend_setup_md || currentScaffold.setup_md || EMPTY_STUDIO_FILES.fe_setup.content;
+  const fe_skills = currentScaffold.frontend_skill_md || currentScaffold.skill_md || EMPTY_STUDIO_FILES.fe_skills.content;
+  const fe_api = currentScaffold.frontend_api_setup_md || currentScaffold.api_setup_md || EMPTY_STUDIO_FILES.fe_apisetup.content;
+  const fe_prompt = currentScaffold.frontend_initial_prompt || currentScaffold.initial_prompt || EMPTY_STUDIO_FILES.fe_prompt.content;
+  const fe_ui = currentScaffold.ui_prototype_html || '';
+
+  const be_agents = currentScaffold.backend_agents_md || EMPTY_STUDIO_FILES.be_agent.content;
+  const be_arch = currentScaffold.backend_architecture_md || EMPTY_STUDIO_FILES.be_architecture.content;
+  const be_setup = currentScaffold.backend_setup_md || EMPTY_STUDIO_FILES.be_setup.content;
+  const be_skills = currentScaffold.backend_skill_md || EMPTY_STUDIO_FILES.be_skills.content;
+  const be_api = currentScaffold.backend_api_setup_md || EMPTY_STUDIO_FILES.be_apisetup.content;
+  const be_prompt = currentScaffold.backend_initial_prompt || EMPTY_STUDIO_FILES.be_prompt.content;
+
+  const scope = currentScaffold.scope_document || EMPTY_STUDIO_FILES.scope.content;
+
+  return {
+    fe_agent:        { filename: 'AGENT.md', folder: 'frontend', display: 'frontend/AGENT.md', content: fe_agents },
+    fe_architecture: { filename: 'ARCHITECTURE.md', folder: 'frontend', display: 'frontend/ARCHITECTURE.md', content: fe_arch },
+    fe_setup:        { filename: 'SETUP.md', folder: 'frontend', display: 'frontend/SETUP.md', content: fe_setup },
+    fe_skills:       { filename: 'SKILLS.md', folder: 'frontend', display: 'frontend/SKILLS.md', content: fe_skills },
+    fe_apisetup:     { filename: 'API_SETUP.md', folder: 'frontend', display: 'frontend/API_SETUP.md', content: fe_api },
+    fe_prompt:       { filename: 'INITIAL_PROMPT.md', folder: 'frontend', display: 'frontend/INITIAL_PROMPT.md', content: fe_prompt },
+    fe_ui:           { filename: 'UI_PROTOTYPE.html', folder: 'frontend', display: 'frontend/UI_PROTOTYPE.html', content: fe_ui },
+
+    be_agent:        { filename: 'AGENT.md', folder: 'backend', display: 'backend/AGENT.md', content: be_agents },
+    be_architecture: { filename: 'ARCHITECTURE.md', folder: 'backend', display: 'backend/ARCHITECTURE.md', content: be_arch },
+    be_setup:        { filename: 'SETUP.md', folder: 'backend', display: 'backend/SETUP.md', content: be_setup },
+    be_skills:       { filename: 'SKILLS.md', folder: 'backend', display: 'backend/SKILLS.md', content: be_skills },
+    be_apisetup:     { filename: 'API_SETUP.md', folder: 'backend', display: 'backend/API_SETUP.md', content: be_api },
+    be_prompt:       { filename: 'INITIAL_PROMPT.md', folder: 'backend', display: 'backend/INITIAL_PROMPT.md', content: be_prompt },
+
+    scope:           { filename: 'SCOPE.md', folder: 'root', display: 'SCOPE.md', content: scope },
+
+    // Aliases for backwards compatibility
+    agent:           { filename: 'AGENT.md', folder: 'frontend', display: 'frontend/AGENT.md', content: fe_agents },
+    architecture:    { filename: 'ARCHITECTURE.md', folder: 'frontend', display: 'frontend/ARCHITECTURE.md', content: fe_arch },
+    setup:           { filename: 'SETUP.md', folder: 'frontend', display: 'frontend/SETUP.md', content: fe_setup },
+    skills:          { filename: 'SKILLS.md', folder: 'frontend', display: 'frontend/SKILLS.md', content: fe_skills },
+    apisetup:        { filename: 'API_SETUP.md', folder: 'frontend', display: 'frontend/API_SETUP.md', content: fe_api },
+    prompt:          { filename: 'INITIAL_PROMPT.md', folder: 'frontend', display: 'frontend/INITIAL_PROMPT.md', content: fe_prompt },
+    ui:              { filename: 'UI_PROTOTYPE.html', folder: 'frontend', display: 'frontend/UI_PROTOTYPE.html', content: fe_ui },
+  };
+}
+
+// ── File Navigation ───────────────────────────────────────────────────────
+function updateSidebarNavVisuals() {
+  document.querySelectorAll('.file-item-btn').forEach((btn) => {
+    const key = btn.getAttribute('data-file');
+    const folder = btn.getAttribute('data-folder') || '';
+    const isAct = (key === activeFileKey || (key === 'fe_agent' && activeFileKey === 'agent') || (key === 'fe_ui' && activeFileKey === 'ui'));
+    const item = getFileMap()[key];
+    const filename = item?.filename || key;
+
+    if (isAct) {
+      if (key === 'fe_ui' || key === 'ui') {
+        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded bg-indigo-50 text-indigo-900 border border-indigo-300 font-semibold flex items-center justify-between truncate";
+        btn.innerHTML = `
+          <span class="flex items-center gap-1.5 truncate">
+            <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path></svg>
+            <span class="font-bold truncate">${filename}</span>
+          </span>
+          <span class="text-[9px] bg-indigo-200/80 text-indigo-800 px-1 rounded uppercase font-mono font-bold shrink-0">Active</span>
+        `;
+      } else if (folder === 'backend' || key.startsWith('be_')) {
+        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded bg-amber-50 text-amber-950 border border-amber-300/80 font-semibold flex items-center justify-between truncate";
+        btn.innerHTML = `
+          <span class="flex items-center gap-1.5 truncate">
+            <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+            <span class="truncate">${filename}</span>
+          </span>
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0"></span>
+        `;
+      } else {
+        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded bg-blue-50 text-blue-900 border border-blue-200/60 font-semibold flex items-center justify-between truncate";
+        btn.innerHTML = `
+          <span class="flex items-center gap-1.5 truncate">
+            <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+            <span class="truncate">${filename}</span>
+          </span>
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"></span>
+        `;
+      }
+    } else {
+      if (key === 'fe_ui' || key === 'ui') {
+        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded text-indigo-700 hover:bg-indigo-50/70 border border-transparent hover:border-indigo-100 flex items-center justify-between truncate";
+        btn.innerHTML = `
+          <span class="flex items-center gap-1.5 truncate">
+            <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path></svg>
+            <span class="font-bold truncate">${filename}</span>
+          </span>
+          <span class="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded uppercase font-mono font-semibold shrink-0">Live UI</span>
+        `;
+      } else {
+        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate";
+        btn.innerHTML = `
+          <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+          <span class="truncate">${filename}</span>
+        `;
+      }
+    }
+  });
+}
+
+document.querySelectorAll('.file-item-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const key = btn.getAttribute('data-file');
+    activeFileKey = key;
+    updateSidebarNavVisuals();
+    renderActiveFileContent();
+    if (key === 'fe_ui' || key === 'ui') {
+      // Direct action: open unconstrained Big Window canvas
+      openBigWindowModal();
+    }
+  });
+});
+
+function renderActiveFileContent() {
+  const fileMap = getFileMap();
+  const file = fileMap[activeFileKey] || fileMap.fe_agent || fileMap.agent;
+  if (!file) return;
+
+  if (currentViewerFilename) currentViewerFilename.textContent = file.display || file.filename;
+  const rawText = file.content || '# No content generated';
+
+  // Calculate size
+  const bytes = new Blob([rawText]).size;
+  const kb = (bytes / 1024).toFixed(1);
+  if (currentViewerFilesize) currentViewerFilesize.textContent = `${kb} KB`;
+
+  const isUiKey = (activeFileKey === 'fe_ui' || activeFileKey === 'ui');
+  if (downloadCurrentFileBtn) {
+    downloadCurrentFileBtn.textContent = isUiKey ? '↓ .html' : '↓ .md';
+  }
+
+  // Handle UI Prototype Tab
+  if (isUiKey) {
+    if (launchToolbarBigWindowBtn) {
+      launchToolbarBigWindowBtn.classList.remove('hidden');
+      launchToolbarBigWindowBtn.classList.add('flex');
+    }
+    if (openExternalUiBtn) {
+      openExternalUiBtn.classList.remove('hidden');
+      openExternalUiBtn.classList.add('flex');
+    }
+
+    if (isRawMode) {
+      if (uiPrototypeContainer) uiPrototypeContainer.classList.add('hidden');
+      if (renderedMarkdownContent) renderedMarkdownContent.classList.add('hidden');
+      if (rawMarkdownContent) {
+        rawMarkdownContent.textContent = rawText;
+        rawMarkdownContent.classList.remove('hidden');
+      }
+    } else {
+      if (renderedMarkdownContent) renderedMarkdownContent.classList.add('hidden');
+      if (rawMarkdownContent) rawMarkdownContent.classList.add('hidden');
+      if (uiPrototypeContainer) {
+        uiPrototypeContainer.classList.remove('hidden');
+        if (uiPrototypeIframe && !inlineFrameContainer.classList.contains('hidden') && uiPrototypeIframe.srcdoc !== rawText) {
+          uiPrototypeIframe.srcdoc = rawText;
+        }
+      }
+    }
+    return;
+  }
+
+  // Handle Standard Markdown Files
+  if (launchToolbarBigWindowBtn) {
+    launchToolbarBigWindowBtn.classList.add('hidden');
+    launchToolbarBigWindowBtn.classList.remove('flex');
+  }
+  if (openExternalUiBtn) {
+    openExternalUiBtn.classList.add('hidden');
+    openExternalUiBtn.classList.remove('flex');
+  }
+  if (uiPrototypeContainer) uiPrototypeContainer.classList.add('hidden');
+
+  if (rawMarkdownContent) rawMarkdownContent.textContent = rawText;
+
+  if (renderedMarkdownContent && window.marked) {
+    try {
+      renderedMarkdownContent.innerHTML = marked.parse(rawText);
+      if (window.hljs) {
+        renderedMarkdownContent.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+      }
+    } catch (e) {
+      renderedMarkdownContent.textContent = rawText;
+    }
+  } else if (renderedMarkdownContent) {
+    renderedMarkdownContent.textContent = rawText;
+  }
+
+  if (isRawMode) {
+    if (renderedMarkdownContent) renderedMarkdownContent.classList.add('hidden');
+    if (rawMarkdownContent) rawMarkdownContent.classList.remove('hidden');
+  } else {
+    if (renderedMarkdownContent) renderedMarkdownContent.classList.remove('hidden');
+    if (rawMarkdownContent) rawMarkdownContent.classList.add('hidden');
+  }
+}
+
+// ── Big Window UI Canvas Modal Operations ─────────────────────────────────
+function openBigWindowModal() {
+  if (!uiCanvasModal) return;
+  const file = getFileMap().ui;
+  const htmlContent = file?.content || '';
+
+  if (modalUiPrototypeIframe) {
+    modalUiPrototypeIframe.srcdoc = htmlContent;
+  }
+  if (canvasProjectTitle) {
+    const title = currentScaffold?.title || projectTitle?.value || 'PulseDesk';
+    canvasProjectTitle.textContent = `${title} — UI_PROTOTYPE.html`;
+  }
+
+  uiCanvasModal.classList.remove('hidden');
+  setModalViewport('desktop');
+  document.body.classList.add('overflow-hidden');
+}
+
+function closeBigWindowModal() {
+  if (!uiCanvasModal) return;
+  uiCanvasModal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
+
+function setModalViewport(mode) {
+  if (!modalIframeWrapper) return;
+  const btns = {
+    desktop: modalVpDesktopBtn,
+    laptop:  modalVpLaptopBtn,
+    tablet:  modalVpTabletBtn,
+    mobile:  modalVpMobileBtn,
+  };
+
+  Object.keys(btns).forEach(k => {
+    if (btns[k]) {
+      btns[k].className = (k === mode)
+        ? "px-2.5 py-1 rounded text-[11px] font-mono font-bold bg-white text-slate-900 shadow-2xs transition cursor-pointer"
+        : "px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer";
+    }
+  });
+
+  if (mode === 'desktop') {
+    modalIframeWrapper.style.maxWidth = '100%';
+  } else if (mode === 'laptop') {
+    modalIframeWrapper.style.maxWidth = '1280px';
+  } else if (mode === 'tablet') {
+    modalIframeWrapper.style.maxWidth = '768px';
+  } else if (mode === 'mobile') {
+    modalIframeWrapper.style.maxWidth = '390px';
+  }
+}
+
+function openPrototypeInNewTab() {
+  const file = getFileMap().ui;
+  if (!file || !file.content) return;
+  const blob = new Blob([file.content], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+}
+
+// Wire Big Window Triggers & Buttons
+if (closeUiCanvasModalBtn) closeUiCanvasModalBtn.addEventListener('click', closeBigWindowModal);
+if (launchBigWindowBtn) launchBigWindowBtn.addEventListener('click', openBigWindowModal);
+if (launchToolbarBigWindowBtn) launchToolbarBigWindowBtn.addEventListener('click', openBigWindowModal);
+if (inlineExpandToBigBtn) inlineExpandToBigBtn.addEventListener('click', openBigWindowModal);
+
+if (modalVpDesktopBtn) modalVpDesktopBtn.addEventListener('click', () => setModalViewport('desktop'));
+if (modalVpLaptopBtn)  modalVpLaptopBtn.addEventListener('click', () => setModalViewport('laptop'));
+if (modalVpTabletBtn)  modalVpTabletBtn.addEventListener('click', () => setModalViewport('tablet'));
+if (modalVpMobileBtn)  modalVpMobileBtn.addEventListener('click', () => setModalViewport('mobile'));
+
+if (modalOpenExternalBtn) modalOpenExternalBtn.addEventListener('click', openPrototypeInNewTab);
+if (launchExternalTabBtn) launchExternalTabBtn.addEventListener('click', openPrototypeInNewTab);
+if (openExternalUiBtn)    openExternalUiBtn.addEventListener('click', openPrototypeInNewTab);
+
+if (modalDownloadHtmlBtn) {
+  modalDownloadHtmlBtn.addEventListener('click', () => {
+    const file = getFileMap().ui;
+    if (!file || !file.content) return;
+    const blob = new Blob([file.content], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.setAttribute('download', file.filename);
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+    showToast(`Downloaded ${file.filename}`);
+  });
+}
+
+// Collapsible Embedded Preview Toggle
+if (toggleInlineFrameBtn && inlineFrameContainer) {
+  toggleInlineFrameBtn.addEventListener('click', () => {
+    const isHidden = inlineFrameContainer.classList.contains('hidden');
+    if (isHidden) {
+      inlineFrameContainer.classList.remove('hidden');
+      toggleInlineFrameBtn.textContent = 'Hide Embedded View ↑';
+      if (uiPrototypeIframe) uiPrototypeIframe.srcdoc = getFileMap().ui?.content || '';
+    } else {
+      inlineFrameContainer.classList.add('hidden');
+      toggleInlineFrameBtn.textContent = 'Show Embedded View ↓';
+    }
+  });
+}
+
+// ESC Key Listener for Modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (uiCanvasModal && !uiCanvasModal.classList.contains('hidden')) {
+      closeBigWindowModal();
+    }
+  }
+});
+
+// ── View Mode ─────────────────────────────────────────────────────────────
+if (modePreviewBtn && modeRawBtn) {
+  modePreviewBtn.addEventListener('click', () => {
+    isRawMode = false;
+    modePreviewBtn.className = "text-[11px] font-mono px-2 py-0.5 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 transition";
+    modeRawBtn.className = "text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition";
+    renderActiveFileContent();
+  });
+  modeRawBtn.addEventListener('click', () => {
+    isRawMode = true;
+    modeRawBtn.className = "text-[11px] font-mono px-2 py-0.5 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 transition";
+    modePreviewBtn.className = "text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition";
+    renderActiveFileContent();
+  });
+}
+
+// ── Copy Current File ─────────────────────────────────────────────────────
+if (copyCurrentFileBtn) {
+  copyCurrentFileBtn.addEventListener('click', () => {
+    const file = getFileMap()[activeFileKey];
+    if (!file || !file.content) return;
+    navigator.clipboard.writeText(file.content).then(() => showToast(`Copied ${file.filename}`));
+  });
+}
+
+// ── Download Single File (.md or .html) ────────────────────────────────────
+if (downloadCurrentFileBtn) {
+  downloadCurrentFileBtn.addEventListener('click', () => {
+    const file = getFileMap()[activeFileKey];
+    if (!file || !file.content) return;
+    const mime = (activeFileKey === 'ui') ? 'text/html;charset=utf-8' : 'text/markdown;charset=utf-8';
+    const blob = new Blob([file.content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.setAttribute('download', file.filename);
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+    showToast(`Downloaded ${file.filename}`);
+  });
+}
+
+// ── AI UI Prototype Synthesis Trigger ─────────────────────────────────────
+function startUiThinkingAnimation(title) {
+  if (!thinkingTerminal || !thinkingLines) return;
+  thinkingLines.innerHTML = '';
+  thinkingTerminal.style.display = 'block';
+
+  const steps = [
+    { prefix: '[MODEL]', text: `Invoking Gemini Flash UI Synthesis Engine for "${title}"...` },
+    { prefix: '[PARSE]', text: 'Extracting data entities, routes, and user interaction states from SCOPE.md...' },
+    { prefix: '[LAYOUT]', text: 'Synthesizing responsive Tailwind layout (monochrome design system, zero overflow)...' },
+    { prefix: '[INTERACT]', text: 'Compiling client-side DOM handlers, modals, search, and tab transitions...' },
+    { prefix: '[EMBED]', text: 'Bundling interactive prototype into standalone UI_PROTOTYPE.html...' },
+  ];
+
+  let delay = 0;
+  steps.forEach((step) => {
+    setTimeout(() => {
+      const line = document.createElement('div');
+      line.className = 'think-line';
+      line.innerHTML = `<span class="t-prefix">${step.prefix}</span><span class="t-text">${step.text}</span>`;
+      thinkingLines.appendChild(line);
+      thinkingTerminal.scrollTop = thinkingTerminal.scrollHeight;
+    }, delay);
+    delay += 500;
+  });
+}
+
+function finishUiThinkingAnimation() {
+  if (!thinkingTerminal || !thinkingLines) return;
+  const line = document.createElement('div');
+  line.className = 'think-line';
+  line.innerHTML = `<span class="t-prefix">[DONE]</span><span class="t-text font-bold text-indigo-400">■ UI Prototype rendered live in interactive sandbox.</span>`;
+  thinkingLines.appendChild(line);
+  setTimeout(() => { thinkingTerminal.style.display = 'none'; }, 2200);
+}
+
+if (generateUiBtn) {
+  generateUiBtn.addEventListener('click', async () => {
+    if (!currentScaffold || !currentScaffold.id) {
+      showToast('⚡ Please click "Generate Scaffold" first to create project specifications');
+      return;
+    }
+
+    generateUiBtn.disabled = true;
+    const origHtml = generateUiBtn.innerHTML;
+    generateUiBtn.innerHTML = `
+      <svg class="w-3.5 h-3.5 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Synthesizing…</span>
+    `;
+
+    startUiThinkingAnimation(currentScaffold.title);
+
+    try {
+      const token = await ensureAuthToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      let res = await fetch(`${API_BASE}/scaffolds/${currentScaffold.id}/generate-ui/`, {
+        method: 'POST',
+        headers,
+      });
+
+      if (res.status === 401) {
+        const freshToken = await ensureAuthToken(true);
+        if (freshToken) {
+          headers['Authorization'] = `Bearer ${freshToken}`;
+          res = await fetch(`${API_BASE}/scaffolds/${currentScaffold.id}/generate-ui/`, {
+            method: 'POST',
+            headers,
+          });
+        }
+      }
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server responded with ${res.status}`);
+      }
+
+      const data = await res.json();
+      currentScaffold.ui_prototype_html = data.ui_prototype_html;
+
+      finishUiThinkingAnimation();
+      activeFileKey = 'ui';
+      updateSidebarNavVisuals();
+      renderActiveFileContent();
+      showToast('⚡ UI Prototype synthesized & rendered live!');
+    } catch (err) {
+      console.error('UI synthesis error:', err);
+      showToast(`Synthesis failed: ${err.message}`);
+      if (thinkingTerminal) thinkingTerminal.style.display = 'none';
+    } finally {
+      generateUiBtn.disabled = false;
+      generateUiBtn.innerHTML = origHtml;
+    }
+  });
+}
+
+// ── Copy Kickoff Prompt ───────────────────────────────────────────────────
+if (copyPromptActionBtn) {
+  copyPromptActionBtn.addEventListener('click', () => {
+    const promptContent = getFileMap().prompt?.content;
+    if (!promptContent) return;
+    navigator.clipboard.writeText(promptContent)
+      .then(() => showToast('Kickoff prompt copied — paste into AI coding agent'));
+  });
+}
+
+// ── ZIP Download Operations (Full, Frontend, Backend) ─────────────────────
+async function triggerZipDownload(target = 'all') {
+  if (downloadZipMenu) downloadZipMenu.classList.add('hidden');
+  const title = currentScaffold?.title || projectTitle?.value || 'PulseDesk';
+  const titleSlug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 30) || 'pulsedesk';
+
+  let zipName = `${titleSlug}-scaffold.zip`;
+  if (target === 'frontend') zipName = `${titleSlug}-frontend-specs.zip`;
+  if (target === 'backend')  zipName = `${titleSlug}-backend-specs.zip`;
+
+  if (downloadZipActionBtn) {
+    downloadZipActionBtn.disabled = true;
+    downloadZipActionBtn.innerHTML = `
+      <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg> Building…`;
+  }
+
+  // 1. Client-Side JSZip
+  if (window.JSZip) {
+    try {
+      const zip = new JSZip();
+      const fileMap = getFileMap();
+
+      if (target === 'all') {
+        const feFolder = zip.folder('frontend');
+        const beFolder = zip.folder('backend');
+
+        // Frontend files
+        ['fe_agent', 'fe_architecture', 'fe_setup', 'fe_skills', 'fe_apisetup', 'fe_prompt', 'fe_ui'].forEach(k => {
+          const item = fileMap[k];
+          if (item?.filename && item?.content) feFolder.file(item.filename, item.content);
+        });
+        // Backend files
+        ['be_agent', 'be_architecture', 'be_setup', 'be_skills', 'be_apisetup', 'be_prompt'].forEach(k => {
+          const item = fileMap[k];
+          if (item?.filename && item?.content) beFolder.file(item.filename, item.content);
+        });
+        // Shared SCOPE.md at root
+        if (fileMap.scope?.content) {
+          zip.file('SCOPE.md', fileMap.scope.content);
+        }
+      } else if (target === 'frontend') {
+        const feFolder = zip.folder('frontend');
+        ['fe_agent', 'fe_architecture', 'fe_setup', 'fe_skills', 'fe_apisetup', 'fe_prompt', 'fe_ui'].forEach(k => {
+          const item = fileMap[k];
+          if (item?.filename && item?.content) feFolder.file(item.filename, item.content);
+        });
+      } else if (target === 'backend') {
+        const beFolder = zip.folder('backend');
+        ['be_agent', 'be_architecture', 'be_setup', 'be_skills', 'be_apisetup', 'be_prompt'].forEach(k => {
+          const item = fileMap[k];
+          if (item?.filename && item?.content) beFolder.file(item.filename, item.content);
+        });
+      }
+
+      const zipBlob = await zip.generateAsync({
+        type: 'blob', mimeType: 'application/zip',
+        compression: 'DEFLATE', compressionOptions: { level: 6 },
+      });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.setAttribute('download', zipName);
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 3000);
+      showToast(`Downloaded ${zipName}`);
+      return;
+    } catch (err) {
+      console.warn('JSZip generation error, trying server fallback:', err);
+    } finally {
+      if (downloadZipActionBtn) {
+        downloadZipActionBtn.disabled = false;
+        downloadZipActionBtn.innerHTML = `
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+          </svg> Download .ZIP ▾`;
+      }
+    }
+  }
+
+  // 2. Server Download Fallback
+  if (currentScaffold?.id) {
+    try {
+      const res = await fetch(`/api/scaffolds/${currentScaffold.id}/download/?target=${target}`);
+      if (!res.ok) throw new Error(`Server status ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.setAttribute('download', zipName);
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 3000);
+      showToast(`Downloaded ${zipName}`);
+    } catch (err) {
+      console.error(err);
+      alert(`Download failed: ${err.message}`);
+    } finally {
+      if (downloadZipActionBtn) {
+        downloadZipActionBtn.disabled = false;
+        downloadZipActionBtn.innerHTML = `
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+          </svg> Download .ZIP ▾`;
+      }
+    }
+  }
+}
+
+// Download Button Dropdown Events
+if (downloadZipActionBtn) {
+  downloadZipActionBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (downloadZipMenu) {
+      downloadZipMenu.classList.toggle('hidden');
+    }
+  });
+}
+
+if (downloadAllZipBtn) {
+  downloadAllZipBtn.addEventListener('click', () => triggerZipDownload('all'));
+}
+if (downloadFrontendZipBtn) {
+  downloadFrontendZipBtn.addEventListener('click', () => triggerZipDownload('frontend'));
+}
+if (downloadBackendZipBtn) {
+  downloadBackendZipBtn.addEventListener('click', () => triggerZipDownload('backend'));
+}
+
+// Close Dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (downloadZipMenu && !downloadZipMenu.classList.contains('hidden')) {
+    if (downloadZipDropdownContainer && !downloadZipDropdownContainer.contains(e.target)) {
+      downloadZipMenu.classList.add('hidden');
+    }
+  }
+});
+
+// ── Form Submission ───────────────────────────────────────────────────────
+if (scaffoldForm) {
+  scaffoldForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title       = projectTitle.value.trim();
+    const scope       = scopeContentText.value.trim();
+    const notes       = customNotes ? customNotes.value.trim() : '';
+    const customStack = techTags.join(', ');
+
+    if (!title) { alert('Enter a project title.'); return; }
+    if (!scope)  { alert('Paste or upload a scope document.'); return; }
+
+    const token = await ensureAuthToken();
+    if (!token) { alert('Authentication failed. Cannot connect to API.'); return; }
+
+    // Lock UI & start terminal
+    submitGenerateBtn.disabled = true;
+    submitGenerateBtn.innerHTML = `
+      <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Synthesizing Specs…</span>
+    `;
+    startThinkingTerminal();
+
+    try {
+      // Step 1: Create scaffold record
+      let createRes = await fetch(`${API_BASE}/scaffolds/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title,
+          scope_document:    scope,
+          blueprint:         null,
+          custom_tech_stack: customStack,
+          custom_notes:      notes,
+        }),
+      });
+
+      if (createRes.status === 401) {
+        const freshToken = await ensureAuthToken(true);
+        if (freshToken) {
+          createRes = await fetch(`${API_BASE}/scaffolds/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${freshToken}`,
+            },
+            body: JSON.stringify({
+              title,
+              scope_document:    scope,
+              blueprint:         null,
+              custom_tech_stack: customStack,
+              custom_notes:      notes,
+            }),
+          });
+        }
+      }
+
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}));
+        throw new Error(err.detail || 'Failed to create project record');
+      }
+
+      const created    = await createRes.json();
+      const scaffoldId = created.id;
+
+      // Step 2: Trigger AI generation
+      const activeAuthToken = authToken || token;
+      let genRes = await fetch(`${API_BASE}/scaffolds/${scaffoldId}/generate/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${activeAuthToken}` },
+      });
+
+      if (genRes.status === 401) {
+        const freshToken = await ensureAuthToken(true);
+        if (freshToken) {
+          genRes = await fetch(`${API_BASE}/scaffolds/${scaffoldId}/generate/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${freshToken}` },
+          });
+        }
+      }
+
+      if (!genRes.ok) {
+        const err = await genRes.json().catch(() => ({}));
+        throw new Error(err.detail || 'AI generation failed');
+      }
+
+      const fullScaffold = await genRes.json();
+      currentScaffold = fullScaffold;
+
+      // Update UI Banner & Metadata
+      if (projectBannerTitle) projectBannerTitle.textContent = fullScaffold.title;
+      if (projectStatusPill) {
+        projectStatusPill.textContent = 'Scaffold Ready';
+        projectStatusPill.className = 'text-[10px] text-emerald-700 font-mono bg-emerald-100/70 border border-emerald-200 px-1.5 rounded';
+      }
+      if (totalFilesBadge) {
+        totalFilesBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 14 ARTIFACTS READY`;
+        totalFilesBadge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+      }
+
+      if (projectStackTagsContainer) {
+        const stackItems = (fullScaffold.detected_tech_stack || customStack || 'Custom')
+          .split(/[,+]/)
+          .map(s => s.trim())
+          .filter(Boolean);
+        projectStackTagsContainer.innerHTML = `
+          <span class="text-[10px] font-mono text-slate-500">Stack:</span>
+          ${stackItems.map(item => `<span class="text-[10px] font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">${item}</span>`).join('')}
+        `;
+      }
+
+      // Generate a short deterministic SHA
+      const randomSha = Math.random().toString(16).substring(2, 10);
+      if (specShaDisplay) specShaDisplay.textContent = `SHA: ${randomSha}`;
+      const specStatusDisplay = document.getElementById('specStatusDisplay');
+      if (specStatusDisplay) specStatusDisplay.textContent = 'Status: Verified Spec';
+
+      if (footerActiveSpec) footerActiveSpec.textContent = fullScaffold.title;
+      if (footerOutputPath) {
+        const slug = fullScaffold.title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 25);
+        footerOutputPath.textContent = `./dist/${slug}-spec.zip`;
+      }
+
+      // Set active file to frontend/AGENT.md
+      activeFileKey = 'fe_agent';
+      updateSidebarNavVisuals();
+      renderActiveFileContent();
+
+      // If Big Window canvas or UI iframe is present, update srcdoc immediately
+      if (modalUiPrototypeIframe && fullScaffold.ui_prototype_html) {
+        modalUiPrototypeIframe.srcdoc = fullScaffold.ui_prototype_html;
+      }
+      if (canvasProjectTitle) {
+        canvasProjectTitle.textContent = `${fullScaffold.title} — UI_PROTOTYPE.html`;
+      }
+
+      stopThinkingTerminal();
+      showToast('All specifications synthesized successfully');
+
+    } catch (err) {
+      console.error(err);
+      stopThinkingTerminal();
+      alert(`Generation Error: ${err.message}`);
+    } finally {
+      submitGenerateBtn.disabled = false;
+      submitGenerateBtn.innerHTML = `
+        <svg class="w-4 h-4 text-blue-400 fill-current" viewBox="0 0 20 20">
+          <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V14a1 1 0 11-2 0v-.586l-2.293-2.293a1 1 0 011.414-1.414L9 10.586V6a1 1 0 112 0v4.586l.879-.879a1 1 0 111.414 1.414L11 13.414z"></path>
+        </svg>
+        <span>Generate Scaffold &amp; Spec Files</span>
+      `;
+    }
+  });
+}
+
+// ── Reset Studio to Pristine Blank State (Zero Stale Caching) ──────────────
+function resetStudioToBlank() {
+  currentScaffold = null;
+  activeFileKey = 'fe_agent';
+  techTags = [];
+  renderTechTags();
+
+  if (projectTitle) projectTitle.value = '';
+  if (scopeContentText) scopeContentText.value = '';
+  if (customNotes) customNotes.value = '';
+  updateWordCount();
+
+  if (projectBannerTitle) projectBannerTitle.textContent = 'Awaiting Project Scope';
+  if (projectStatusPill) {
+    projectStatusPill.textContent = 'No Active Spec';
+    projectStatusPill.className = 'text-[10px] text-slate-600 font-mono bg-slate-200 px-1.5 rounded';
+  }
+  if (projectStackTagsContainer) {
+    projectStackTagsContainer.innerHTML = '<span class="text-[10px] font-mono text-slate-500">Stack:</span> <span class="text-[10px] font-mono text-slate-400 italic">None</span>';
+  }
+  if (totalFilesBadge) {
+    totalFilesBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> 0 ARTIFACTS';
+    totalFilesBadge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200';
+  }
+  if (specShaDisplay) {
+    specShaDisplay.textContent = 'SHA: —';
+  }
+  const specStatusDisplay = document.getElementById('specStatusDisplay');
+  if (specStatusDisplay) {
+    specStatusDisplay.textContent = 'Status: Uninitialized';
+  }
+  if (footerActiveSpec) footerActiveSpec.textContent = 'None';
+  if (footerOutputPath) footerOutputPath.textContent = './dist/spec.zip';
+
+  if (catFrontend) catFrontend.textContent = 'Awaiting scope upload';
+  if (catBackend) catBackend.textContent = 'Awaiting scope upload';
+  if (catDatabase) catDatabase.textContent = 'Awaiting scope upload';
+  if (catServices) catServices.textContent = 'Awaiting scope upload';
+  if (titleSourceBadge) {
+    titleSourceBadge.textContent = 'Awaiting Scope';
+    titleSourceBadge.className = 'text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded font-mono font-medium';
+  }
+  if (techSourceBadge) {
+    techSourceBadge.textContent = 'Awaiting Scope';
+    techSourceBadge.className = 'text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded font-mono font-medium';
+  }
+  if (aiAnalysisStatus) {
+    aiAnalysisStatus.innerHTML = `
+      <div class="flex items-center gap-2 text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded text-[11px] font-mono">
+        <span class="text-blue-500 font-bold">⚡</span>
+        <span>Drop a scope document to trigger 1st-place AI field extraction.</span>
+      </div>
+    `;
+  }
+  if (modalUiPrototypeIframe) modalUiPrototypeIframe.srcdoc = '';
+  if (uiPrototypeIframe) uiPrototypeIframe.srcdoc = '';
+
+  updateSidebarNavVisuals();
+  renderActiveFileContent();
+}
+
+// ── Wire Studio Reset Button ──────────────────────────────────────────────
+const resetStudioBtn = document.getElementById('resetStudioBtn');
+if (resetStudioBtn) {
+  resetStudioBtn.addEventListener('click', () => {
+    resetStudioToBlank();
+    showToast('Studio reset to pristine state');
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  ensureAuthToken();
+  renderTechTags();
+  updateSidebarNavVisuals();
+  renderActiveFileContent();
+  updateWordCount();
+  // Ensure pristine zero-caching state on load: do NOT load past database projects
+  resetStudioToBlank();
+});

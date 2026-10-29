@@ -1,0 +1,14 @@
+.venv/
+.env
+db.sqlite3
+staticfiles/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.zip
+scratch/
+extracted_reference_projects/
