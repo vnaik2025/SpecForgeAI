@@ -257,37 +257,37 @@ const EMPTY_STUDIO_FILES = {
     filename: 'AGENT.md',
     folder: 'frontend',
     display: 'frontend/AGENT.md',
-    content: `# FRONTEND AGENT.md — Autonomous UI Coding Directives\n\n*No project specifications synthesized yet.*\n\nEnter or upload your job scope on the left, configure the desired tech stack, and click **Synthesize Full Specs** to generate custom specifications.`
+    content: `# Frontend Guidelines (AGENT.md)\n\nNo project specifications generated yet.\n\nEnter your project scope on the left, select your platform, and click **Generate Architecture Plan** to build your specifications.`
   },
   fe_architecture: {
     filename: 'ARCHITECTURE.md',
     folder: 'frontend',
     display: 'frontend/ARCHITECTURE.md',
-    content: `# FRONTEND ARCHITECTURE.md — UI Component Topology & Layout\n\n*No frontend architecture loaded yet.*`
+    content: `# Frontend Architecture (ARCHITECTURE.md)\n\nNo architecture specifications loaded yet.`
   },
   fe_setup: {
     filename: 'SETUP.md',
     folder: 'frontend',
     display: 'frontend/SETUP.md',
-    content: `# FRONTEND SETUP.md — Client Installation & Dev Server Playbook\n\n*No frontend setup playbook loaded yet.*`
+    content: `# Setup Guide (SETUP.md)\n\nNo setup instructions loaded yet.`
   },
   fe_skills: {
     filename: 'SKILLS.md',
     folder: 'frontend',
     display: 'frontend/SKILLS.md',
-    content: `# FRONTEND SKILLS.md — UI Automation & Component Recipes\n\n*No frontend agent skills loaded yet.*`
+    content: `# UI Capabilities (SKILLS.md)\n\nNo UI capabilities loaded yet.`
   },
   fe_apisetup: {
     filename: 'API_SETUP.md',
     folder: 'frontend',
     display: 'frontend/API_SETUP.md',
-    content: `# FRONTEND API_SETUP.md — HTTP Client & Interceptor Specification\n\n*No client API contracts loaded yet.*`
+    content: `# API Integration (API_SETUP.md)\n\nNo API client specifications loaded yet.`
   },
   fe_prompt: {
     filename: 'INITIAL_PROMPT.md',
     folder: 'frontend',
     display: 'frontend/INITIAL_PROMPT.md',
-    content: `# FRONTEND INITIAL_PROMPT.md — UI Kickoff Sequence\n\n*No frontend kickoff prompt loaded yet.*`
+    content: `# Kickoff Prompt (INITIAL_PROMPT.md)\n\nNo kickoff prompt loaded yet.`
   },
   fe_ui: {
     filename: 'UI_PROTOTYPE.html',
@@ -301,37 +301,37 @@ const EMPTY_STUDIO_FILES = {
     filename: 'AGENT.md',
     folder: 'backend',
     display: 'backend/AGENT.md',
-    content: `# BACKEND AGENT.md — Server Architecture Directives\n\n*No backend specifications synthesized yet.*`
+    content: `# Backend Guidelines (AGENT.md)\n\nNo backend specifications generated yet.`
   },
   be_architecture: {
     filename: 'ARCHITECTURE.md',
     folder: 'backend',
     display: 'backend/ARCHITECTURE.md',
-    content: `# BACKEND ARCHITECTURE.md — Relational Data Schemas & Service Layer\n\n*No backend architecture loaded yet.*`
+    content: `# Backend Architecture (ARCHITECTURE.md)\n\nNo backend architecture loaded yet.`
   },
   be_setup: {
     filename: 'SETUP.md',
     folder: 'backend',
     display: 'backend/SETUP.md',
-    content: `# BACKEND SETUP.md — Database Migrations & Environment Playbook\n\n*No backend setup playbook loaded yet.*`
+    content: `# Backend Setup Guide (SETUP.md)\n\nNo backend setup instructions loaded yet.`
   },
   be_skills: {
     filename: 'SKILLS.md',
     folder: 'backend',
     display: 'backend/SKILLS.md',
-    content: `# BACKEND SKILLS.md — Database & API Automation Recipes\n\n*No backend skills loaded yet.*`
+    content: `# Backend Capabilities (SKILLS.md)\n\nNo backend capabilities loaded yet.`
   },
   be_apisetup: {
     filename: 'API_SETUP.md',
     folder: 'backend',
     display: 'backend/API_SETUP.md',
-    content: `# BACKEND API_SETUP.md — REST API Contracts & Endpoint Registry\n\n*No backend endpoint contracts loaded yet.*`
+    content: `# API Endpoints (API_SETUP.md)\n\nNo API endpoint contracts loaded yet.`
   },
   be_prompt: {
     filename: 'INITIAL_PROMPT.md',
     folder: 'backend',
     display: 'backend/INITIAL_PROMPT.md',
-    content: `# BACKEND INITIAL_PROMPT.md — API & Database Kickoff Sequence\n\n*No backend kickoff prompt loaded yet.*`
+    content: `# Backend Kickoff Prompt (INITIAL_PROMPT.md)\n\nNo backend kickoff prompt loaded yet.`
   },
 
   // Root / Shared Files
@@ -339,7 +339,7 @@ const EMPTY_STUDIO_FILES = {
     filename: 'SCOPE.md',
     folder: 'root',
     display: 'SCOPE.md',
-    content: `# SCOPE.md — Project Scope Document\n\n*No scope document loaded yet.*`
+    content: `# Project Scope (SCOPE.md)\n\nNo project scope loaded yet.`
   },
 
   // Backwards compatibility aliases
