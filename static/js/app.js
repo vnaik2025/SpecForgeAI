@@ -1,7 +1,8 @@
 // SpecForge AI v2.0 — Autonomous Spec Engine Frontend Controller
 
 const API_BASE = '/api';
-let authToken = localStorage.getItem('specforge_token') || localStorage.getItem('agentforge_token') || null;
+let authToken = localStorage.getItem('specforge_access_token') || localStorage.getItem('specforge_token') || null;
+let refreshToken = localStorage.getItem('specforge_refresh_token') || null;
 let currentScaffold = null;
 let activeFileKey = 'fe_agent';
 let isRawMode = false;
@@ -403,15 +404,61 @@ function switchAuthTab(tab) {
   hideAuthError();
 }
 
+async function refreshAuthToken() {
+  if (!refreshToken) return null;
+  try {
+    const res = await fetch(`${API_BASE}/auth/token/refresh/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh: refreshToken }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      authToken = data.access;
+      localStorage.setItem('specforge_access_token', authToken);
+      localStorage.setItem('specforge_token', authToken);
+      updateAuthBadge(true);
+      return authToken;
+    }
+  } catch (err) {
+    console.warn('Token refresh error:', err);
+  }
+  // Refresh token invalid or expired
+  authToken = null;
+  refreshToken = null;
+  currentUser = null;
+  localStorage.removeItem('specforge_access_token');
+  localStorage.removeItem('specforge_refresh_token');
+  localStorage.removeItem('specforge_token');
+  renderLoggedOutUI();
+  updateAuthBadge(false);
+  return null;
+}
+
 async function checkAuthStatus() {
+  if (!authToken && !refreshToken) {
+    renderLoggedOutUI();
+    return null;
+  }
+  if (!authToken && refreshToken) {
+    await refreshAuthToken();
+  }
   if (!authToken) {
     renderLoggedOutUI();
     return null;
   }
   try {
-    const res = await fetch(`${API_BASE}/auth/me/`, {
+    let res = await fetch(`${API_BASE}/auth/me/`, {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
+    if (res.status === 401 && refreshToken) {
+      const freshToken = await refreshAuthToken();
+      if (freshToken) {
+        res = await fetch(`${API_BASE}/auth/me/`, {
+          headers: { 'Authorization': `Bearer ${freshToken}` }
+        });
+      }
+    }
     if (res.ok) {
       currentUser = await res.json();
       renderLoggedInUI(currentUser);
@@ -421,11 +468,10 @@ async function checkAuthStatus() {
   } catch (err) {
     console.warn('Auth check error:', err);
   }
-  // Token is expired or invalid
   authToken = null;
   currentUser = null;
+  localStorage.removeItem('specforge_access_token');
   localStorage.removeItem('specforge_token');
-  localStorage.removeItem('agentforge_token');
   renderLoggedOutUI();
   updateAuthBadge(false);
   return null;
@@ -463,6 +509,12 @@ async function ensureAuthToken(forceRefresh = false) {
         return authToken;
       }
     } catch (e) {}
+  }
+
+  // If token is near expiration or forceRefresh, try refreshing first
+  if (refreshToken) {
+    const refreshed = await refreshAuthToken();
+    if (refreshed) return refreshed;
   }
 
   // Token missing or expired - open modal
@@ -1890,16 +1942,25 @@ if (signInForm) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        showAuthError(data.detail || 'Invalid email or password.');
+        showAuthError(data.detail || data.error || (res.status === 500 ? 'Server authentication error. Please retry in a moment.' : 'Invalid email or password.'));
         if (btn) btn.disabled = false;
         return;
       }
       authToken = data.access;
+      refreshToken = data.refresh || null;
+      localStorage.setItem('specforge_access_token', authToken);
       localStorage.setItem('specforge_token', authToken);
+      if (refreshToken) localStorage.setItem('specforge_refresh_token', refreshToken);
       closeAuthModal();
-      await checkAuthStatus();
+      if (data.user) {
+        currentUser = data.user;
+        renderLoggedInUI(currentUser);
+        updateAuthBadge(true);
+      } else {
+        await checkAuthStatus();
+      }
       showToast('Signed in successfully');
     } catch (err) {
       showAuthError('Network error connecting to server.');
@@ -1921,6 +1982,10 @@ if (signUpForm) {
       showAuthError('Please fill in all required fields.');
       return;
     }
+    if (password.length < 8) {
+      showAuthError('Password must be at least 8 characters long.');
+      return;
+    }
     const btn = document.getElementById('submitRegisterBtn');
     if (btn) btn.disabled = true;
     try {
@@ -1929,29 +1994,36 @@ if (signUpForm) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, first_name, last_name }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const errorText = Object.values(data).flat().join(' ') || 'Registration failed.';
+        let errorText = 'Registration failed.';
+        if (data.email) errorText = Array.isArray(data.email) ? data.email.join(' ') : data.email;
+        else if (data.password) errorText = Array.isArray(data.password) ? data.password.join(' ') : data.password;
+        else if (data.detail) errorText = data.detail;
+        else if (res.status === 500) errorText = 'Server error during registration. Please retry.';
         showAuthError(errorText);
         if (btn) btn.disabled = false;
         return;
       }
-      // Log in immediately after register
-      const loginRes = await fetch(`${API_BASE}/auth/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      if (loginRes.ok) {
-        const loginData = await loginRes.json();
-        authToken = loginData.access;
+      // Register directly issues JWT pair + user info
+      if (data.access) {
+        authToken = data.access;
+        refreshToken = data.refresh || null;
+        localStorage.setItem('specforge_access_token', authToken);
         localStorage.setItem('specforge_token', authToken);
+        if (refreshToken) localStorage.setItem('specforge_refresh_token', refreshToken);
         closeAuthModal();
-        await checkAuthStatus();
+        if (data.user) {
+          currentUser = data.user;
+          renderLoggedInUI(currentUser);
+          updateAuthBadge(true);
+        } else {
+          await checkAuthStatus();
+        }
         showToast('Account created & signed in!');
       } else {
         switchAuthTab('signin');
-        showAuthError('Account created! Please sign in.');
+        showToast('Account created! Please sign in.');
       }
     } catch (err) {
       showAuthError('Network error connecting to server.');
@@ -1964,7 +2036,10 @@ if (signUpForm) {
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
     authToken = null;
+    refreshToken = null;
     currentUser = null;
+    localStorage.removeItem('specforge_access_token');
+    localStorage.removeItem('specforge_refresh_token');
     localStorage.removeItem('specforge_token');
     localStorage.removeItem('agentforge_token');
     renderLoggedOutUI();

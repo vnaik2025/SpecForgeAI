@@ -1,40 +1,59 @@
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import (
+    CustomTokenObtainPairSerializer,
+    RegisterSerializer,
+    UserSerializer,
+)
 
 
 class RegisterView(generics.CreateAPIView):
-    """POST /api/auth/register/ - open to anyone."""
+    """POST /api/auth/register/ - registers user and automatically returns signed JWT tokens."""
 
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)  # 400 if invalid
+        serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        # Respond with the safe serializer (never echo the password)
-        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+        # Generate JWT token pair directly on registration
+        refresh = RefreshToken.for_user(user)
+        user_data = UserSerializer(user).data
+
+        response_data = {
+            **user_data,
+            "user": user_data,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "message": "Account created successfully.",
+        }
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 class LoginView(TokenObtainPairView):
-    """POST /api/auth/login/ - returns {access, refresh}.
+    """POST /api/auth/login/ - returns {access, refresh, user}."""
 
-    TokenObtainPairView already does the work: it checks email + password
-    (because USERNAME_FIELD='email') and signs the JWTs.
-    """
+    serializer_class = CustomTokenObtainPairSerializer
+    permission_classes = [AllowAny]
+
+
+class RefreshView(TokenRefreshView):
+    """POST /api/auth/token/refresh/ - exchanges refresh token for fresh access token."""
 
     permission_classes = [AllowAny]
 
 
 class MeView(generics.RetrieveAPIView):
-    """GET /api/auth/me/ - the logged-in user."""
+    """GET /api/auth/me/ - the logged-in user profile."""
 
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return self.request.user  # set by JWTAuthentication from the token
+        return self.request.user

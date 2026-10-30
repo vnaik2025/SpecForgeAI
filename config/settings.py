@@ -32,6 +32,19 @@ csrf_origins_env = os.getenv("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in csrf_origins_env.split(",") if o.strip()
 ]
+# Auto-include Render wildcard domains and localhost
+for origin in [
+    "https://*.onrender.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]:
+    if origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(origin)
+
+# Reverse proxy SSL header: essential for Render / Cloud reverse proxies
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
 
 
 # --- Application definition ---

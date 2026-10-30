@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: "./build.sh"
-    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    startCommand: "sh ./entrypoint.sh"
     envVars:
       - key: DEBUG
         value: "False"
@@ -18,4 +18,3 @@ services:
         value: "gemini-3.5-flash"
       - key: AI_REQUEST_TIMEOUT
         value: "60.0"
-
