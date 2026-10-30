@@ -1,7 +1,7 @@
-// AgentForge v2.0 — Autonomous Spec Engine Frontend Controller
+// SpecForge AI v2.0 — Autonomous Spec Engine Frontend Controller
 
 const API_BASE = '/api';
-let authToken = localStorage.getItem('agentforge_token') || null;
+let authToken = localStorage.getItem('specforge_token') || localStorage.getItem('agentforge_token') || null;
 let currentScaffold = null;
 let activeFileKey = 'fe_agent';
 let isRawMode = false;
@@ -340,7 +340,7 @@ async function ensureAuthToken(forceRefresh = false) {
     if (res.ok) {
       const data = await res.json();
       authToken = data.access;
-      localStorage.setItem('agentforge_token', authToken);
+      localStorage.setItem('specforge_token', authToken);
       updateAuthBadge(true);
       return authToken;
     }

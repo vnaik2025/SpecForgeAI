@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: mini-reports
+    name: specforge-ai
     runtime: python
     plan: free
     buildCommand: "./build.sh"
@@ -18,3 +18,4 @@ services:
         value: "gemini-3.5-flash"
       - key: AI_REQUEST_TIMEOUT
         value: "60.0"
+
