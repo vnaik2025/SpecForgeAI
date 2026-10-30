@@ -1,3 +1,4 @@
+import xml.etree.ElementTree as ET
 import io
 import json
 import logging
@@ -213,70 +214,102 @@ def analyse_report(report):
         raise
 
 
+def extract_text_from_docx_bytes(data: bytes) -> tuple[str, str]:
+    """Extract clean title and human-readable text from raw Word .docx bytes using standard library."""
+    if not data:
+        return "", ""
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as zf:
+            doc_entry = None
+            for name in zf.namelist():
+                if name.endswith("word/document.xml") or name == "word/document.xml":
+                    doc_entry = name
+                    break
+            if not doc_entry:
+                for name in zf.namelist():
+                    if name.endswith("document.xml"):
+                        doc_entry = name
+                        break
+            if not doc_entry:
+                return "", ""
+
+            xml_bytes = zf.read(doc_entry)
+            root = ET.fromstring(xml_bytes)
+
+            paragraphs = []
+            for elem in root.iter():
+                if elem.tag.endswith("}p"):
+                    texts = [t.text for t in elem.iter() if t.tag.endswith("}t") and t.text]
+                    p_text = "".join(texts).strip()
+                    if p_text:
+                        paragraphs.append(p_text)
+                elif elem.tag.endswith("}tr"):
+                    row_cells = []
+                    for cell in elem.iter():
+                        if cell.tag.endswith("}tc"):
+                            c_texts = [t.text for t in cell.iter() if t.tag.endswith("}t") and t.text]
+                            c_str = "".join(c_texts).strip()
+                            if c_str:
+                                row_cells.append(c_str)
+                    if row_cells:
+                        paragraphs.append(" | ".join(row_cells))
+
+            doc_title = ""
+            for p in paragraphs[:5]:
+                clean_p = p.strip()
+                if 3 <= len(clean_p) <= 80 and not clean_p.lower().startswith(('table of contents', 'overview', 'page')):
+                    doc_title = clean_p
+                    break
+
+            clean_text = "\n\n".join(paragraphs).strip()
+            return doc_title, clean_text
+    except Exception as exc:
+        logger.warning("Error parsing docx bytes: %s", exc)
+        return "", ""
+
+
 def extract_clean_text_from_docx_stream(raw_text: str) -> tuple[str, str]:
     """Extract clean title and human-readable text from raw Word .docx streams or binary strings."""
     if not raw_text:
         return "", ""
-    if not ("PK" in raw_text and ("word/" in raw_text or "document.xml" in raw_text or "[Content_Types]" in raw_text)):
+    if not ("PK" in raw_text or "[Content_Types]" in raw_text or "word/" in raw_text):
         return "", raw_text
-
-    doc_title = ""
-    paragraphs = []
 
     # Method 1: Try reading as a zip archive via BytesIO with multiple encodings
     for enc in ["latin-1", "utf-8", "cp1252"]:
         try:
             raw_bytes = raw_text.encode(enc, errors="ignore")
-            with zipfile.ZipFile(io.BytesIO(raw_bytes)) as zf:
-                doc_entry = None
-                for name in zf.namelist():
-                    if name.endswith("word/document.xml"):
-                        doc_entry = name
-                        break
-                if doc_entry:
-                    xml_bytes = zf.read(doc_entry)
-                    import xml.etree.ElementTree as ET
-                    root = ET.fromstring(xml_bytes)
-                    for p in root.iter("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p"):
-                        texts = [t.text for t in p.iter("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t") if t.text]
-                        p_text = "".join(texts).strip()
-                        if p_text:
-                            paragraphs.append(p_text)
-                    if paragraphs:
-                        break
+            title, text = extract_text_from_docx_bytes(raw_bytes)
+            if text and len(text) > 20:
+                return title, text
         except Exception:
             continue
 
     # Method 2: Fallback regex extraction of XML <w:t> tags from raw string
-    if not paragraphs:
-        t_matches = re.findall(r'<w:t[^>]*>(.*?)</w:t>', raw_text, re.DOTALL)
-        if t_matches:
-            buf = []
-            for tm in t_matches:
-                clean_t = re.sub(r'<[^>]+>', '', tm).strip()
-                if clean_t:
-                    buf.append(clean_t)
-                    if len(buf) >= 3 or clean_t.endswith(('.', ':', '?', '!')):
-                        paragraphs.append(" ".join(buf))
-                        buf = []
-            if buf:
-                paragraphs.append(" ".join(buf))
+    t_matches = re.findall(r'<w:t[^>]*>(.*?)</w:t>', raw_text, re.DOTALL)
+    if t_matches:
+        buf = []
+        paragraphs = []
+        for tm in t_matches:
+            clean_t = re.sub(r'<[^>]+>', '', tm).strip()
+            if clean_t:
+                buf.append(clean_t)
+                if len(buf) >= 3 or clean_t.endswith(('.', ':', '?', '!')):
+                    paragraphs.append(" ".join(buf))
+                    buf = []
+        if buf:
+            paragraphs.append(" ".join(buf))
+        if paragraphs:
+            doc_title = ""
+            for p in paragraphs[:5]:
+                if 3 <= len(p) <= 60 and not p.lower().startswith(('table of contents', 'overview', 'page')):
+                    doc_title = p
+                    break
+            return doc_title, "\n\n".join(paragraphs).strip()
 
-    # Method 3: Clean up control characters and extract readable sequences if still empty
-    if not paragraphs:
-        cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]', ' ', raw_text)
-        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-        words = [w for w in cleaned.split(' ') if len(w) > 2 and any(c.isalpha() for c in w)]
-        if len(words) > 10:
-            paragraphs.append(" ".join(words[:500]))
-
-    if paragraphs:
-        for p in paragraphs[:5]:
-            if 3 <= len(p) <= 60 and not p.lower().startswith(('table of contents', 'overview', 'page')):
-                doc_title = p
-                break
-        clean_content = "\n\n".join(paragraphs).strip()
-        return doc_title, clean_content
+    # If it is raw binary zip bytes and cannot be decoded, do not return raw binary string
+    if raw_text.startswith("PK") or "[Content_Types].xml" in raw_text[:500]:
+        return "", ""
 
     return "", raw_text
 
@@ -287,7 +320,7 @@ def extract_clean_text_from_scope_stream(raw_text: str) -> tuple[str, str]:
         return "", ""
     if "%PDF" in raw_text or "1 0 obj" in raw_text or "endobj" in raw_text or "/Filter /FlateDecode" in raw_text:
         return extract_clean_text_from_pdf_stream(raw_text)
-    if "PK" in raw_text and ("word/" in raw_text or "document.xml" in raw_text or "[Content_Types]" in raw_text):
+    if "PK" in raw_text or "[Content_Types]" in raw_text or "word/" in raw_text:
         return extract_clean_text_from_docx_stream(raw_text)
     return "", raw_text
 
@@ -557,7 +590,7 @@ def extract_scope_fields_with_ai(scope_text: str, filename: str = "") -> dict:
     Uses Gemini LLM with robust JSON decoding, gracefully falling back to the rich heuristic extractor.
     """
     # 1. Clean PDF stream bytes if present
-    doc_title, clean_scope = extract_clean_text_from_pdf_stream(scope_text)
+    doc_title, clean_scope = extract_clean_text_from_scope_stream(scope_text)
     effective_scope = clean_scope if clean_scope and len(clean_scope) > 30 else scope_text
 
     # Check for AI API key
@@ -1251,7 +1284,7 @@ def generate_project_scaffold(scaffold):
 
     try:
         raw_scope = scaffold.scope_document or ""
-        doc_title, clean_scope = extract_clean_text_from_pdf_stream(raw_scope)
+        doc_title, clean_scope = extract_clean_text_from_scope_stream(raw_scope)
         if clean_scope and clean_scope != raw_scope:
             scaffold.scope_document = clean_scope
 
@@ -1272,7 +1305,7 @@ def generate_project_scaffold(scaffold):
         if update_fields:
             scaffold.save(update_fields=update_fields)
         raw_scope = scaffold.scope_document or ""
-        doc_title, clean_scope = extract_clean_text_from_pdf_stream(raw_scope)
+        doc_title, clean_scope = extract_clean_text_from_scope_stream(raw_scope)
         update_fields = []
         if doc_title and (not scaffold.title or scaffold.title in ["School Accessories Mart", "PulseDesk Issue Tracker", "Project Workspace"]):
             scaffold.title = doc_title

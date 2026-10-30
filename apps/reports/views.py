@@ -124,10 +124,29 @@ class AnalyzeScopeDocumentView(APIView):
             filename = uploaded_file.name
             try:
                 content_bytes = uploaded_file.read()
-                try:
-                    scope_text = content_bytes.decode("utf-8")
-                except UnicodeDecodeError:
-                    scope_text = content_bytes.decode("latin-1", errors="ignore")
+                # 1. Check for Word .docx document
+                if filename.lower().endswith((".docx", ".doc")) or content_bytes.startswith(b"PK\x03\x04"):
+                    doc_title, extracted = services.extract_text_from_docx_bytes(content_bytes)
+                    if extracted and len(extracted.strip()) > 10:
+                        scope_text = extracted
+                    else:
+                        return Response(
+                            {"detail": "Could not extract text from the Word document. Please ensure it is a valid .docx file or copy and paste the text directly."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                # 2. Check for PDF document
+                elif filename.lower().endswith(".pdf") or content_bytes.startswith(b"%PDF"):
+                    doc_title, extracted = services.extract_clean_text_from_pdf_stream(content_bytes.decode("latin-1", errors="ignore"))
+                    if extracted and len(extracted.strip()) > 10:
+                        scope_text = extracted
+                    else:
+                        scope_text = content_bytes.decode("utf-8", errors="ignore")
+                # 3. Standard text / markdown file
+                else:
+                    try:
+                        scope_text = content_bytes.decode("utf-8")
+                    except UnicodeDecodeError:
+                        scope_text = content_bytes.decode("latin-1", errors="ignore")
             except Exception as e:
                 return Response(
                     {"detail": f"Could not read uploaded file: {e}"},
@@ -140,8 +159,20 @@ class AnalyzeScopeDocumentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Sanitize if raw binary zip stream was submitted as JSON text
+        if scope_text.startswith("PK") or "[Content_Types].xml" in scope_text[:500]:
+            doc_title, cleaned = services.extract_clean_text_from_docx_stream(scope_text)
+            if cleaned and len(cleaned) > 20 and not cleaned.startswith("PK"):
+                scope_text = cleaned
+            else:
+                return Response(
+                    {"detail": "Binary file content detected. Please upload .docx files directly with the file picker or copy and paste the document text."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         try:
             result = services.extract_scope_fields_with_ai(scope_text, filename=filename)
+            result["extracted_text"] = scope_text
             return Response(result, status=status.HTTP_200_OK)
         except Exception as exc:
             logger.exception("AI scope analysis endpoint error: %s", exc)
@@ -266,4 +297,4 @@ class GenerateUiPrototypeView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-
+

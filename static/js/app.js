@@ -736,11 +736,30 @@ async function processUploadedFile(file) {
   const isDocx = file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
   let extractedTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
 
+  // 1. Word Document (.docx) Extraction
   if (isDocx) {
     showToast(`Extracting document text from Word document "${file.name}"...`);
-    try {
-      if (window.JSZip) {
-        const zip = await JSZip.loadAsync(file);
+
+    // Method A: Client-side Mammoth.js
+    if (window.mammoth) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const mammothRes = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+        const docText = (mammothRes && mammothRes.value ? mammothRes.value.trim() : '');
+        if (docText.length > 20) {
+          applyExtractedDocument(extractedTitle, docText);
+          return;
+        }
+      } catch (mErr) {
+        console.warn('Mammoth extraction failed, trying JSZip fallback:', mErr);
+      }
+    }
+
+    // Method B: Client-side JSZip
+    if (window.JSZip) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
         let docFile = zip.file('word/document.xml');
         if (!docFile) {
           for (let name in zip.files) {
@@ -767,22 +786,35 @@ async function processUploadedFile(file) {
               lines.push(pText);
             }
           }
-          const fullDocText = lines.join('\n\n');
-          if (fullDocText.trim().length > 20) {
-            applyExtractedDocument(extractedTitle, fullDocText.trim());
+          const fullDocText = lines.join('\n\n').trim();
+          if (fullDocText.length > 20) {
+            applyExtractedDocument(extractedTitle, fullDocText);
             return;
           }
         }
+      } catch (docxErr) {
+        console.warn('JSZip document parsing failed:', docxErr);
       }
-    } catch (docxErr) {
-      console.warn('Word document parsing failed, falling back:', docxErr);
     }
+
+    // Method C: Server-side binary multipart extraction
+    showToast(`Uploading "${file.name}" for server extraction...`);
+    const serverResult = await uploadFileForServerAnalysis(file);
+    if (serverResult && serverResult.extracted_text) {
+      applyExtractedDocument(serverResult.title || extractedTitle, serverResult.extracted_text);
+      applyAiAnalysisResults(serverResult);
+      return;
+    }
+
+    showToast(`Could not extract text from "${file.name}". Please copy and paste the document text directly.`, 'error');
+    return;
   }
 
+  // 2. PDF Document Extraction
   if (isPdf) {
     showToast(`Extracting full document text from "${file.name}"...`);
-    try {
-      if (window.pdfjsLib) {
+    if (window.pdfjsLib) {
+      try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullDocText = '';
@@ -820,19 +852,72 @@ async function processUploadedFile(file) {
           applyExtractedDocument(extractedTitle, fullDocText.trim());
           return;
         }
+      } catch (pdfErr) {
+        console.warn('PDF.js parse failed, trying server extraction:', pdfErr);
       }
-    } catch (pdfErr) {
-      console.warn('PDF.js parse failed, falling back to FileReader:', pdfErr);
     }
+
+    // Method C: Server-side PDF extraction
+    showToast(`Uploading PDF for server-side extraction...`);
+    const serverResult = await uploadFileForServerAnalysis(file);
+    if (serverResult && serverResult.extracted_text) {
+      applyExtractedDocument(serverResult.title || extractedTitle, serverResult.extracted_text);
+      applyAiAnalysisResults(serverResult);
+      return;
+    }
+
+    showToast(`Could not extract text from "${file.name}". Please copy and paste the document text directly.`, 'error');
+    return;
   }
 
-  // 2. Standard FileReader for text, markdown, or fallback
+  // 3. Binary guard: Prevent binary files from being read as text
+  const isBinary = file.name.match(/\.(zip|tar|gz|7z|rar|bin|exe|dll|iso|png|jpg|jpeg|gif|webp|mp4|mp3|wav|xlsx?|pptx?)$/i);
+  if (isBinary) {
+    showToast(`Binary file detected ("${file.name}"). Please upload a Word (.docx), PDF, Markdown, or text file.`, 'error');
+    return;
+  }
+
+  // 4. Standard FileReader for plain text / markdown files only
   const reader = new FileReader();
   reader.onload = (e) => {
-    let content = e.target.result;
+    let content = e.target.result || '';
+    if (content.startsWith('PK\x03\x04') || content.startsWith('%PDF') || content.includes('[Content_Types].xml')) {
+      showToast(`Cannot read binary document as plain text. Please upload .docx or .pdf directly.`, 'error');
+      return;
+    }
     applyExtractedDocument(extractedTitle, content);
   };
   reader.readAsText(file);
+}
+
+async function uploadFileForServerAnalysis(file) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('filename', file.name);
+
+    const headers = {};
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
+    const res = await fetch(`${API_BASE}/scaffolds/analyze-scope/`, {
+      method: 'POST',
+      headers: headers,
+      body: formData
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      console.warn('Server file analysis returned error:', errData.detail || res.status);
+    }
+  } catch (err) {
+    console.warn('Server file analysis network error:', err);
+  }
+  return null;
 }
 
 function applyExtractedDocument(title, content) {
@@ -913,6 +998,14 @@ async function runAiScopeAnalysis(scopeText, filename = '') {
 
 function applyAiAnalysisResults(data) {
   if (!data) return;
+
+  // 0. Update extracted text if returned by server analysis
+  if (data.extracted_text && scopeContentText) {
+    if (!scopeContentText.value || scopeContentText.value.startsWith('PK') || scopeContentText.value.includes('[Content_Types].xml')) {
+      scopeContentText.value = data.extracted_text;
+      updateWordCount();
+    }
+  }
 
   // 1. Title
   if (data.title && projectTitle) {

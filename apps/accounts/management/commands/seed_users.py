@@ -36,3 +36,4 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Successfully created demo user: {demo_email}"))
         else:
             self.stdout.write(f"Demo user already exists: {demo_email}")
+
