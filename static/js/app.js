@@ -238,6 +238,9 @@ const dockFormBtnText = document.getElementById('dockFormBtnText');
 const toggleFileTreeDockBtn = document.getElementById('toggleFileTreeDockBtn');
 const dockTreeBtnText = document.getElementById('dockTreeBtnText');
 const collapseInputPanelBtn = document.getElementById('collapseInputPanelBtn');
+const studioEmptyState = document.getElementById('studioEmptyState');
+const studioActiveWorkspace = document.getElementById('studioActiveWorkspace');
+const studioActionButtons = document.getElementById('studioActionButtons');
 
 let isFormCollapsed = false;
 let isFileTreeCollapsed = false;
@@ -1190,8 +1193,12 @@ function openBigWindowModal() {
   if (modalUiPrototypeIframe) {
     modalUiPrototypeIframe.srcdoc = htmlContent;
   }
+  if (!currentScaffold || !currentScaffold.ui_prototype_html) {
+    showToast('No interactive UI prototype generated yet. Generate specifications first.');
+    return;
+  }
   if (canvasProjectTitle) {
-    const title = currentScaffold?.title || projectTitle?.value || 'PulseDesk';
+    const title = currentScaffold?.title || projectTitle?.value?.trim() || 'Architecture Blueprint';
     canvasProjectTitle.textContent = `${title} — UI_PROTOTYPE.html`;
   }
 
@@ -1455,13 +1462,17 @@ if (copyPromptActionBtn) {
 // ── ZIP Download Operations (Full, Frontend, Backend) ─────────────────────
 async function triggerZipDownload(target = 'all') {
   if (downloadZipMenu) downloadZipMenu.classList.add('hidden');
-  const title = currentScaffold?.title || projectTitle?.value || 'PulseDesk';
+  if (!currentScaffold) {
+    showToast('Please generate specifications first before downloading.');
+    return;
+  }
+  const title = currentScaffold?.title || projectTitle?.value?.trim() || 'project-blueprint';
   const titleSlug = title
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
-    .slice(0, 30) || 'pulsedesk';
+    .slice(0, 30) || 'project-blueprint';
 
   let zipName = `${titleSlug}-scaffold.zip`;
   if (target === 'frontend') zipName = `${titleSlug}-frontend-specs.zip`;
@@ -1697,6 +1708,11 @@ if (scaffoldForm) {
       const fullScaffold = await genRes.json();
       currentScaffold = fullScaffold;
 
+      // Reveal Studio Workspace & Actions
+      if (studioEmptyState) studioEmptyState.classList.add('hidden');
+      if (studioActiveWorkspace) studioActiveWorkspace.classList.remove('hidden');
+      if (studioActionButtons) studioActionButtons.classList.remove('hidden');
+
       // Update UI Banner & Metadata
       if (projectBannerTitle) projectBannerTitle.textContent = fullScaffold.title;
       if (projectStatusPill) {
@@ -1767,6 +1783,9 @@ if (scaffoldForm) {
 function resetStudioToBlank() {
   currentScaffold = null;
   activeFileKey = 'fe_agent';
+  if (studioEmptyState) studioEmptyState.classList.remove('hidden');
+  if (studioActiveWorkspace) studioActiveWorkspace.classList.add('hidden');
+  if (studioActionButtons) studioActionButtons.classList.add('hidden');
   techTags = [];
   renderTechTags();
 
