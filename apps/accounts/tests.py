@@ -11,6 +11,7 @@ class AuthTests(APITestCase):
         self.register_url = reverse("accounts:register")
         self.login_url = reverse("accounts:login")
         self.me_url = reverse("accounts:me")
+        self.refresh_url = reverse("accounts:token_refresh")
         self.user_data = {
             "email": "testuser@example.com",
             "password": "SecurePassword123!",
@@ -40,3 +41,28 @@ class AuthTests(APITestCase):
         me_response = self.client.get(self.me_url)
         self.assertEqual(me_response.status_code, status.HTTP_200_OK)
         self.assertEqual(me_response.data["email"], self.user_data["email"])
+    def test_token_refresh_lifecycle(self):
+        # 1. Login to get token pair
+        user = User.objects.create_user(**self.user_data)
+        login_res = self.client.post(self.login_url, {
+            "email": self.user_data["email"],
+            "password": self.user_data["password"],
+        })
+        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
+        refresh_token = login_res.data["refresh"]
+
+        # 2. Exchange refresh token for fresh access token
+        refresh_res = self.client.post(self.refresh_url, {"refresh": refresh_token})
+        self.assertEqual(refresh_res.status_code, status.HTTP_200_OK)
+        self.assertIn("access", refresh_res.data)
+
+        # 3. Test resilience: deleted/non-existent user must return 401, not 500
+        user.delete()
+        res_deleted = self.client.post(self.refresh_url, {"refresh": refresh_token})
+        self.assertEqual(res_deleted.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(res_deleted.data.get("code"), "token_not_valid")
+
+        # 4. Test invalid token
+        res_invalid = self.client.post(self.refresh_url, {"refresh": "malformed.refresh.token"})
+        self.assertEqual(res_invalid.status_code, status.HTTP_401_UNAUTHORIZED)
+

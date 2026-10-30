@@ -1,3 +1,4 @@
+import logging
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -6,9 +7,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .serializers import (
     CustomTokenObtainPairSerializer,
+    CustomTokenRefreshSerializer,
     RegisterSerializer,
     UserSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -46,7 +50,21 @@ class LoginView(TokenObtainPairView):
 class RefreshView(TokenRefreshView):
     """POST /api/auth/token/refresh/ - exchanges refresh token for fresh access token."""
 
+    serializer_class = CustomTokenRefreshSerializer
     permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except Exception as exc:
+            logger.warning("Token refresh error handled gracefully: %s", exc)
+            return Response(
+                {
+                    "detail": "Token is invalid or expired. Please sign in again.",
+                    "code": "token_not_valid",
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
 
 class MeView(generics.RetrieveAPIView):

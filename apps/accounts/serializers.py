@@ -1,6 +1,10 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer,
+    TokenRefreshSerializer,
+)
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 User = get_user_model()
 
@@ -44,3 +48,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         data["user"] = UserSerializer(self.user).data
         return data
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    """Resilient token refresh serializer: handles deleted/non-existent users gracefully as 401 instead of 500."""
+
+    def validate(self, attrs):
+        try:
+            return super().validate(attrs)
+        except User.DoesNotExist:
+            raise InvalidToken("User account associated with this token no longer exists.")
+        except Exception as exc:
+            if isinstance(exc, (InvalidToken, serializers.ValidationError)):
+                raise
+            raise InvalidToken(f"Token validation failed: {str(exc)}")
+
