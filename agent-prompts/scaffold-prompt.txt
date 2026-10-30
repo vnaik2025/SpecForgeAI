@@ -53,33 +53,33 @@ CLIENT / FRONTEND / MOBILE SPECIFICATION STANDARDS (frontend/ FOLDER)
 ======================================================================
 
 1. frontend/AGENT.md:
-# 🤖 Client / Frontend / Mobile AI Agent Boundaries & Directives
+# Client / Frontend / Mobile AI Agent Boundaries & Directives
 - **Project Name & Platform Scope**: State whether this is Web, Mobile (React Native / Flutter), or Dual.
 - **Reading Order**:
   1. `ARCHITECTURE.md` → 2. `API_SETUP.md` → 3. `SKILLS.md` → 4. `AGENT.md`.
-## 🔁 End-to-End Architectural Flow
+## End-to-End Architectural Flow
 - Provide an ASCII pipeline tailored to the detected platform:
   - **For Web**: `User Action → Component → TanStack Query Hook → Axios Client → Interceptor → REST API → Cache Update → DOM Render`
   - **For Mobile (React Native/Expo)**: `User Tap/Gesture → Screen View → Custom Hook (TanStack/Context) → Axios/Fetch Client → Interceptor (SecureStore Bearer) → REST API → Local Storage Sync (AsyncStorage) → Native Re-render (Yoga Engine)`
   - **For Mobile (Flutter)**: `User Interaction → Widget Screen → Bloc / Riverpod State Provider → Dio / Http Repository → Secure Storage Interceptor → REST API → Immutable State Emit → Widget Tree Rebuild`
-## 🧑‍💻 Code Persona
+## ‍ Code Persona
 - **If Web**: Senior Frontend Engineer specializing in responsive SPA architectures, design systems, and state synchronization.
 - **If Mobile (React Native)**: Senior Mobile Engineer specializing in React Native / Expo, TypeScript, native performance, gesture interactions, and offline-resilient architectures.
 - **If Mobile (Flutter)**: Senior Mobile Engineer specializing in Flutter & Dart, Clean Architecture (Bloc/Riverpod), Material 3/Cupertino styling, and native platform channels.
-## 📝 1. NAMING CONVENTIONS
+## 1. NAMING CONVENTIONS
 Markdown Table with platform-accurate naming conventions:
 - For Web/RN: Components (`PascalCase.tsx`), Hooks (`useHookName.ts`), Screens (`ScreenName.tsx`), Services (`entityService.ts`).
 - For Flutter: Classes (`PascalCase`), Files (`snake_case.dart`), Widgets (`PascalCase`), Providers/Controllers (`camelCase`).
-## 📁 2. DIRECTORY TAXONOMY & USAGE RULES
+## 2. DIRECTORY TAXONOMY & USAGE RULES
 Annotated table mapping folder boundaries:
 - For Web: `src/components/ui`, `src/components/controls`, `src/components/domain`, `src/pages`, `src/hooks`, `src/services`.
 - For React Native: `src/screens`, `src/navigation`, `src/components/primitives`, `src/components/composite`, `src/hooks`, `src/services`, `src/storage`, `src/constants`.
 - For Flutter: `lib/features/{feature}/presentation/screens`, `lib/features/{feature}/presentation/widgets`, `lib/features/{feature}/domain`, `lib/features/{feature}/data`, `lib/core/network`, `lib/core/storage`.
-## 🛡️ 3. STANDARD VALIDATIONS & HARDWARE/DEVICE PERMISSIONS
+## ️ 3. STANDARD VALIDATIONS & HARDWARE/DEVICE PERMISSIONS
 - Client-side validation rules (Zod / HookForm or Dart form validators).
 - Device permission handling (Camera, Location, Notifications) with graceful user prompt fallback when denied.
 - Safe Area insets and keyboard avoidance guards.
-## 🗺️ 4. SEQUENTIAL IMPLEMENTATION ROADMAP (MODULE-BY-MODULE)
+## ️ 4. SEQUENTIAL IMPLEMENTATION ROADMAP (MODULE-BY-MODULE)
 - **Module 1**: Project Bootstrap, Theme/Design Tokens, Platform Navigation Skeleton (Tabs + Stacks).
 - **Module 2**: Tier 1 Base UI Primitives / Widgets (Buttons, Inputs, Modals, Cards, Badges).
 - **Module 3**: API Client, Token Interceptor, Secure Storage, & Authentication Flow.
@@ -87,16 +87,16 @@ Annotated table mapping folder boundaries:
 - **Module 5**: Secondary Features, Search, Filters, Pull-to-Refresh & Pagination.
 - **Module 6**: Device Hardware Integration (Camera/QR, Biometrics, Push Notifications, Maps).
 - **Module 7**: Error Boundaries, Empty States, Skeletons, & Production Build Preparation.
-## 🚫 5. STRICT PROHIBITIONS (DON'TS)
+## 5. STRICT PROHIBITIONS (DON'TS)
 - No hardcoded API URLs or secrets.
 - For Web: No direct DOM query selectors or raw CSS styles.
 - For Mobile: No ignoring Safe Area insets, no blocking the main JS/UI thread with unoptimized calculations, no storing auth tokens in plain unencrypted storage, no unhandled platform permission denials.
 
 ----------------------------------------------------------------------
 2. frontend/ARCHITECTURE.md:
-# 🏗️ [Project Name] – Client & Mobile Architecture
+# ️ [Project Name] – Client & Mobile Architecture
 - **Executive System Overview**: Target platforms (iOS, Android, Web), architecture paradigm, state management strategy, offline capability.
-## 🧱 Technology Stack
+## Technology Stack
 Markdown Table specifying Layer, Technology, Version, and Purpose (adapted to Web or React Native or Flutter):
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
@@ -108,38 +108,38 @@ Markdown Table specifying Layer, Technology, Version, and Purpose (adapted to We
 | Styling & Theme | NativeWind / StyleSheet / Material 3 | Responsive native theme system |
 | Hardware & Device APIs | Expo Camera / ImagePicker / LocalAuthentication | Native sensors & biometric auth |
 | Network Transport | Axios / Dio | Intercepted HTTP REST client |
-## 🗂️ Complete Directory Structure
+## ️ Complete Directory Structure
 - Annotated ASCII folder tree down to file level with inline `# description` comments.
-## 📱 Navigation & View Hierarchy (For Mobile / Web)
+## Navigation & View Hierarchy (For Mobile / Web)
 - Tab Bar Navigation (e.g. Home, Browse/Schedule, Activities, Profile).
 - Stack Navigation (Auth Stack, Detail Modals, Settings Flow).
-## 🔄 Core User Interaction Workflows
+## Core User Interaction Workflows
 - Step-by-step ASCII sequence diagrams for primary workflows (e.g. Login with Biometric fallback, Booking & QR generation flow, Offline action sync).
 
 ----------------------------------------------------------------------
 3. frontend/SETUP.md:
-# ⚙️ [Project Name] – Client Setup & Development Guide
-## 📖 Reading Order
+# ️ [Project Name] – Client Setup & Development Guide
+## Reading Order
 `1. ARCHITECTURE.md` → `2. API_SETUP.md` → `3. SKILLS.md` → `4. AGENT.md`
-## 🚀 Installation & Dependencies
+## Installation & Dependencies
 - Exact terminal setup commands:
   - If Web: `npm install axios @tanstack/react-query react-hook-form zod ...`
   - If React Native (Expo): `npx create-expo-app ... && npx expo install expo-router expo-secure-store expo-camera expo-local-authentication axios @tanstack/react-query ...`
   - If Flutter: `flutter create ... && flutter pub add dio flutter_bloc flutter_secure_storage go_router ...`
-## 🔐 Environment Variables (`.env.example`)
+## Environment Variables (`.env.example`)
 - Complete configuration variables (API endpoints, Google Maps API key, Sentry DSN, Firebase config).
-## 📌 Design Tokens & Platform Constants
+## Design Tokens & Platform Constants
 - Currency (`INR` / `₹`), Locale (`en-IN`), Date formatting.
 - Brand Color Tokens: Primary, Secondary, Background, Surface, Card, Border, Error, Success.
 - Native Typography hierarchy and responsive spacing units.
-## 🧩 Reusable UI Components / Widgets Checklist
+## Reusable UI Components / Widgets Checklist
 - Text Input with floating label, error state, and icon prefix/suffix.
 - Primary, Secondary, and Outlined Buttons with Loading indicator.
 - Bottom Sheet Modal / Dialog with backdrop blur.
 - Status Badges / Pills.
 - Card Views with elevation/shadow tokens.
 - Pull-to-refresh List View with Skeleton loading and Empty state illustration.
-## 📑 Screens / Routes Reference
+## Screens / Routes Reference
 Markdown Table:
 | Route / Screen | File Path | Access Level | Primary Hook / Controller | Key Interactions |
 | :--- | :--- | :--- | :--- | :--- |
@@ -148,7 +148,7 @@ Markdown Table:
 
 ----------------------------------------------------------------------
 4. frontend/SKILLS.md:
-# 🛠️ frontend/SKILLS.md — Client & Mobile Implementation Boilerplates
+# ️ frontend/SKILLS.md — Client & Mobile Implementation Boilerplates
 Must provide CONCRETE, PRODUCTION-READY CODE SNIPPETS adapted to the detected platform:
 - **Pattern 1: Centralized API Client with Token Interceptor**:
   - Web/RN: Axios instance using `SecureStore` (or `localStorage` on web) to inject Bearer tokens, catching 401 for token refresh or logout.
@@ -167,7 +167,7 @@ Must provide CONCRETE, PRODUCTION-READY CODE SNIPPETS adapted to the detected pl
 
 ----------------------------------------------------------------------
 5. frontend/API_SETUP.md:
-# 🌐 Client API Integration & Contracts
+# Client API Integration & Contracts
 ## 1. Base URL & Protocol
 - Base URL: `API_BASE_URL` (`/api/v1`).
 - Content-Type: `application/json`.
@@ -206,7 +206,7 @@ Markdown Table:
 
 ----------------------------------------------------------------------
 6. frontend/INITIAL_PROMPT.md:
-# 🚀 Client / Frontend / Mobile AI Coding Assistant Kickoff Prompt
+# Client / Frontend / Mobile AI Coding Assistant Kickoff Prompt
 - Direct, actionable kickoff instructions directing the AI assistant to read `ARCHITECTURE.md`, `API_SETUP.md`, `SKILLS.md`, and `AGENT.md` in sequence, initialize the project and dependencies, configure the navigation hierarchy (Tabs & Stacks), set up the API client and secure storage, and build features iteratively module-by-module.
 
 ======================================================================
@@ -214,21 +214,21 @@ BACKEND SPECIFICATION STANDARDS (backend/ FOLDER)
 ======================================================================
 
 1. backend/AGENT.md:
-# 🤖 Backend AI Agent Boundaries & Architectural Directives
+# Backend AI Agent Boundaries & Architectural Directives
 - **Project Name & Domain Scope**: Server-side REST API, database persistence, background workers, and business logic.
 - **Reading Order**:
   1. `ARCHITECTURE.md` → 2. `API_SETUP.md` → 3. `SKILLS.md` → 4. `AGENT.md`.
-## 🔁 End-to-End Architectural Flow
+## End-to-End Architectural Flow
 ```
 HTTP Request → Route Definition → Middleware Stack (CORS, Rate Limiting, Body Parser) → Authentication Guard (JWT Verify) → RBAC Permission Check → Request DTO Validator (Zod/Joi/DRF) → Controller (Thin) → Domain Service (Fat Business Logic) → Repository / ORM Entity → Database (ACID Transaction) → Standard Envelope Formatter → HTTP Response
 ```
-## 🧑‍💻 Code Persona: Principal Backend Architect
+## ‍ Code Persona: Principal Backend Architect
 - Strict Clean Architecture / Layered Architecture.
 - Thin Controllers, Fat Domain Services. Zero business logic inside route controllers.
 - Atomic Database Transactions (`transaction.atomic()` or ORM transaction wrapper).
 - Strict typing, explicit error codes, and structured logging.
 - Passwords hashed using bcrypt / Argon2. Zero plain-text credentials in logs or DB.
-## 📝 1. NAMING CONVENTIONS
+## 1. NAMING CONVENTIONS
 Markdown Table:
 | Element | Convention | Format | Example |
 | :--- | :--- | :--- | :--- |
@@ -238,7 +238,7 @@ Markdown Table:
 | Services | PascalCase + Service | `EntityService` | `PaymentService.ts` |
 | Middlewares | camelCase | `middlewareName` | `authGuard.ts`, `roleCheck.ts` |
 | Route Paths | kebab-case | `/kebab-case` | `/api/v1/user-profiles` |
-## 📁 2. DIRECTORY TAXONOMY & USAGE RULES
+## 2. DIRECTORY TAXONOMY & USAGE RULES
 Markdown Table:
 | Directory | Permitted Contents | Prohibited Contents |
 | :--- | :--- | :--- |
@@ -248,9 +248,9 @@ Markdown Table:
 | `src/models/` | DB schema definitions, indexes, relations, hooks | Business workflows, controller logic |
 | `src/middleware/` | Auth checks, error handlers, rate limiters, logging | Domain operations |
 | `src/utils/` | Shared pure functions, formatting, crypt helpers | Stateful domain logic |
-## 🛡️ 2. STANDARD VALIDATIONS & DATA INTEGRITY
+## ️ 2. STANDARD VALIDATIONS & DATA INTEGRITY
 - Numbered rules: Schema validation on all request bodies, foreign key constraints with explicit `ON DELETE CASCADE` or `PROTECT`, unique constraints, database indexes on queried foreign keys and search fields.
-## 🗺️ 4. SEQUENTIAL IMPLEMENTATION ROADMAP (MODULE-BY-MODULE)
+## ️ 4. SEQUENTIAL IMPLEMENTATION ROADMAP (MODULE-BY-MODULE)
 - **Module 1**: Project Bootstrap, Database Configuration, & Migration Tooling.
 - **Module 2**: User Model, Authentication Services (JWT, refresh tokens, password hashing), & Auth Routes.
 - **Module 3**: Role-Based Access Control (RBAC) Middleware & Permission Guards.
@@ -258,14 +258,14 @@ Markdown Table:
 - **Module 5**: Complex Business Logic Services (Booking, Checkout, State Transitions, Approvals).
 - **Module 6**: Background Workers, Email / Notification Dispatchers (FCM/APNs for Mobile, Nodemailer for Email), & File Upload Handlers (S3/Cloudinary).
 - **Module 7**: Seed Data Scripts, Automated Integration Tests, & Production Logging.
-## 🚫 5. STRICT PROHIBITIONS (DON'TS)
+## 5. STRICT PROHIBITIONS (DON'TS)
 - Never store raw passwords. Never expose internal stack traces in API responses. Never place database queries inside route handlers. Never run destructive database migrations without backup.
 
 ----------------------------------------------------------------------
 2. backend/ARCHITECTURE.md:
-# 🏗️ [Project Name] – Backend Architecture
+# ️ [Project Name] – Backend Architecture
 - **Executive System Overview**: Server architecture, API design philosophy, database strategy, mobile push notification architecture (FCM / APNs), and background processing.
-## 🧱 Backend Technology Stack
+## Backend Technology Stack
 Markdown Table:
 | Layer | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
@@ -278,40 +278,40 @@ Markdown Table:
 | Caching | Redis (ioredis / redis-py) | Latest | Session store, rate limiting, and cache-aside |
 | Background Jobs | BullMQ / Celery | Latest | Asynchronous tasks, emails, notification queues |
 | File Storage | AWS S3 / Cloudinary | Latest | Secure asset and document storage |
-## 🗂️ Complete Directory Structure
+## ️ Complete Directory Structure
 - Annotated ASCII folder tree of the backend codebase down to file level with inline `# description` comments for every file and folder.
-## 🗄️ Database Models & Entity-Relationship Schema Design
+## ️ Database Models & Entity-Relationship Schema Design
 - Exhaustive schema breakdown for EVERY database entity:
   - Table name, field names, data types, constraints (PRIMARY KEY, NOT NULL, UNIQUE, DEFAULT).
   - Relationships: One-to-Many (`1:N`), Many-to-Many (`M:N`), Foreign Keys with `ON DELETE` actions.
   - Mobile-specific fields when applicable: Device Push Tokens table (`user_id`, `fcm_token`, `device_type` [ios/android], `last_active`).
   - Performance Indexes: B-tree indexes on foreign keys, unique indexes, composite indexes.
-## 👥 Role-Based Access Control (RBAC) Matrix
+## Role-Based Access Control (RBAC) Matrix
 Markdown Table:
 | Role | Entity / Resource | Permissions | Constraints / Scope |
 | :--- | :--- | :--- | :--- |
 | `superadmin` | All Resources | Create, Read, Update, Delete | Global system access |
 | `manager` | Assigned Studio / Branch | Create, Read, Update | Restricted to assigned branch ID |
 | `user` / `client` | Own Profile, Bookings | Read, Create (Self only) | Restricted to `user_id == req.user.id` |
-## 🔄 Core Business Workflows & State Machines
+## Core Business Workflows & State Machines
 - ASCII sequence diagrams for primary server-side transactions (e.g. Transactional Booking Flow with seat lock, Push notification dispatch pipeline, Status lifecycle state machine).
 
 ----------------------------------------------------------------------
 3. backend/SETUP.md:
-# ⚙️ [Project Name] – Backend Setup & Development Guide
-## 📖 Reading Order
+# ️ [Project Name] – Backend Setup & Development Guide
+## Reading Order
 `1. ARCHITECTURE.md` → `2. API_SETUP.md` → `3. SKILLS.md` → `4. AGENT.md`
-## 🚀 Installation & Dependencies
+## Installation & Dependencies
 - Exact, copy-pasteable terminal commands to set up the environment and install all packages:
   `npm install express cors dotenv jsonwebtoken bcrypt zod pg prisma redis firebase-admin` (or `pip install -r requirements.txt`).
-## 🔐 Environment Variables (`.env.example`)
+## Environment Variables (`.env.example`)
 - Complete, exhaustive `.env.example` file block with detailed comments explaining every key:
   - Server Port, Database Connection String (`DATABASE_URL`), JWT Secrets & Expiry, CORS Whitelist (`CORS_ORIGIN`), Redis URI, Firebase Admin Service Account credentials for push notifications, Email/SMS SMTP credentials.
   - Secret generation helper command: `openssl rand -base64 32`.
-## 🗄️ Database Migrations & Initial Seeding
+## ️ Database Migrations & Initial Seeding
 - Exact CLI commands to generate migrations, apply migrations, and run seed data scripts.
 - Seed data summary (default admin credentials: email, temporary password, role).
-## 💼 Core Service Layer Catalog
+## Core Service Layer Catalog
 Markdown Table:
 | Service Name | File Location | Core Responsibilities |
 | :--- | :--- | :--- |
@@ -321,7 +321,7 @@ Markdown Table:
 
 ----------------------------------------------------------------------
 4. backend/SKILLS.md:
-# 🛠️ backend/SKILLS.md — Backend Implementation Patterns & Boilerplates
+# ️ backend/SKILLS.md — Backend Implementation Patterns & Boilerplates
 Must provide CONCRETE, PRODUCTION-READY CODE SNIPPETS for these core backend patterns:
 - **Pattern 1: Database Singleton Connection & Lifecycle (`config/database.ts`)**:
   Connection pool setup, health check ping, graceful shutdown hooks on `SIGINT` / `SIGTERM`.
@@ -342,7 +342,7 @@ Must provide CONCRETE, PRODUCTION-READY CODE SNIPPETS for these core backend pat
 
 ----------------------------------------------------------------------
 5. backend/API_SETUP.md:
-# 🌐 Backend REST API Specifications & Contracts
+# Backend REST API Specifications & Contracts
 ## 1. Base URL & Protocol
 - Base URL: `/api/v1`.
 - Headers: `Authorization: Bearer <JWT_ACCESS_TOKEN>`, `Content-Type: application/json`.
@@ -384,7 +384,7 @@ Markdown Table:
 
 ----------------------------------------------------------------------
 6. backend/INITIAL_PROMPT.md:
-# 🚀 Backend AI Coding Assistant Kickoff Prompt
+# Backend AI Coding Assistant Kickoff Prompt
 - Direct, actionable kickoff instructions directing the AI assistant to read `ARCHITECTURE.md`, `API_SETUP.md`, `SKILLS.md`, and `AGENT.md` in sequence, initialize the database and migrations, configure the global error handler and envelope responses, implement authentication and RBAC guards, and construct domain services and REST endpoints module-by-module.
 
 ======================================================================

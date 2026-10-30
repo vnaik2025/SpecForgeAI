@@ -203,6 +203,45 @@ const uiCanvasModal            = document.getElementById('uiCanvasModal');
 const closeUiCanvasModalBtn    = document.getElementById('closeUiCanvasModalBtn');
 const modalUiPrototypeIframe   = document.getElementById('modalUiPrototypeIframe');
 const modalIframeWrapper       = document.getElementById('modalIframeWrapper');
+
+// ── Auth & Docking Elements ────────────────────────────────────────────────
+let currentUser = null;
+const authModal = document.getElementById('authModal');
+const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+const openAuthModalBtn = document.getElementById('openAuthModalBtn');
+const authNavGuest = document.getElementById('authNavGuest');
+const authNavUser = document.getElementById('authNavUser');
+const userInitialsAvatar = document.getElementById('userInitialsAvatar');
+const userDisplayName = document.getElementById('userDisplayName');
+const userEmailDisplay = document.getElementById('userEmailDisplay');
+const logoutBtn = document.getElementById('logoutBtn');
+const authTabSignInBtn = document.getElementById('authTabSignInBtn');
+const authTabSignUpBtn = document.getElementById('authTabSignUpBtn');
+const signInForm = document.getElementById('signInForm');
+const signUpForm = document.getElementById('signUpForm');
+const loginEmailInput = document.getElementById('loginEmailInput');
+const loginPasswordInput = document.getElementById('loginPasswordInput');
+const registerFirstNameInput = document.getElementById('registerFirstNameInput');
+const registerLastNameInput = document.getElementById('registerLastNameInput');
+const registerEmailInput = document.getElementById('registerEmailInput');
+const registerPasswordInput = document.getElementById('registerPasswordInput');
+const authErrorMessage = document.getElementById('authErrorMessage');
+const authErrorText = document.getElementById('authErrorText');
+
+// Docking Elements
+const formColumn = document.getElementById('formColumn');
+const studioColumn = document.getElementById('studioColumn');
+const fileExplorerPanel = document.getElementById('fileExplorerPanel');
+const docViewerPanel = document.getElementById('docViewerPanel');
+const toggleFormDockBtn = document.getElementById('toggleFormDockBtn');
+const dockFormBtnText = document.getElementById('dockFormBtnText');
+const toggleFileTreeDockBtn = document.getElementById('toggleFileTreeDockBtn');
+const dockTreeBtnText = document.getElementById('dockTreeBtnText');
+const collapseInputPanelBtn = document.getElementById('collapseInputPanelBtn');
+
+let isFormCollapsed = false;
+let isFileTreeCollapsed = false;
+
 const canvasProjectTitle       = document.getElementById('canvasProjectTitle');
 const modalVpDesktopBtn        = document.getElementById('modalVpDesktopBtn');
 const modalVpLaptopBtn         = document.getElementById('modalVpLaptopBtn');
@@ -313,10 +352,106 @@ const EMPTY_STUDIO_FILES = {
   ui: { filename: 'UI_PROTOTYPE.html', folder: 'frontend', display: 'frontend/UI_PROTOTYPE.html', content: '' }
 };
 
+
+function openAuthModal(tab = 'signin', errorMsg = null) {
+  if (!authModal) return;
+  authModal.classList.remove('hidden');
+  switchAuthTab(tab);
+  if (errorMsg) {
+    showAuthError(errorMsg);
+  } else {
+    hideAuthError();
+  }
+}
+
+function closeAuthModal() {
+  if (!authModal) return;
+  authModal.classList.add('hidden');
+  hideAuthError();
+}
+
+function showAuthError(msg) {
+  if (!authErrorMessage || !authErrorText) return;
+  authErrorText.textContent = msg;
+  authErrorMessage.classList.remove('hidden');
+}
+
+function hideAuthError() {
+  if (!authErrorMessage) return;
+  authErrorMessage.classList.add('hidden');
+}
+
+function switchAuthTab(tab) {
+  if (tab === 'signin') {
+    authTabSignInBtn?.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-white');
+    authTabSignInBtn?.classList.remove('text-slate-500');
+    authTabSignUpBtn?.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-white');
+    authTabSignUpBtn?.classList.add('text-slate-500');
+    signInForm?.classList.remove('hidden');
+    signUpForm?.classList.add('hidden');
+  } else {
+    authTabSignUpBtn?.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-white');
+    authTabSignUpBtn?.classList.remove('text-slate-500');
+    authTabSignInBtn?.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-white');
+    authTabSignInBtn?.classList.add('text-slate-500');
+    signUpForm?.classList.remove('hidden');
+    signInForm?.classList.add('hidden');
+  }
+  hideAuthError();
+}
+
+async function checkAuthStatus() {
+  if (!authToken) {
+    renderLoggedOutUI();
+    return null;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/auth/me/`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (res.ok) {
+      currentUser = await res.json();
+      renderLoggedInUI(currentUser);
+      updateAuthBadge(true);
+      return authToken;
+    }
+  } catch (err) {
+    console.warn('Auth check error:', err);
+  }
+  // Token is expired or invalid
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('specforge_token');
+  localStorage.removeItem('agentforge_token');
+  renderLoggedOutUI();
+  updateAuthBadge(false);
+  return null;
+}
+
+function renderLoggedInUI(user) {
+  if (authNavGuest) authNavGuest.classList.add('hidden');
+  if (authNavUser) authNavUser.classList.remove('hidden');
+  if (userDisplayName) {
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Developer';
+    userDisplayName.textContent = name;
+  }
+  if (userEmailDisplay) {
+    userEmailDisplay.textContent = user.email || '';
+  }
+  if (userInitialsAvatar) {
+    const initial = (user.first_name ? user.first_name[0] : (user.email ? user.email[0] : 'U')).toUpperCase();
+    userInitialsAvatar.textContent = initial;
+  }
+}
+
+function renderLoggedOutUI() {
+  if (authNavGuest) authNavGuest.classList.remove('hidden');
+  if (authNavUser) authNavUser.classList.add('hidden');
+}
+
 async function ensureAuthToken(forceRefresh = false) {
   if (authToken && !forceRefresh) {
     try {
-      // Decode JWT payload to verify expiry
       const payloadBase64 = authToken.split('.')[1];
       const payload = JSON.parse(atob(payloadBase64));
       const nowSeconds = Math.floor(Date.now() / 1000);
@@ -324,29 +459,11 @@ async function ensureAuthToken(forceRefresh = false) {
         updateAuthBadge(true);
         return authToken;
       }
-      // If token expires in less than 60 seconds, renew
-      console.log('JWT access token expired or near expiry, re-authenticating...');
-    } catch (e) {
-      // Invalid format or parse error, fall through to re-login
-    }
+    } catch (e) {}
   }
 
-  try {
-    const res = await fetch(`${API_BASE}/auth/login/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'me@example.com', password: 'pass12345' }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      authToken = data.access;
-      localStorage.setItem('specforge_token', authToken);
-      updateAuthBadge(true);
-      return authToken;
-    }
-  } catch (err) {
-    console.warn('Auth error:', err);
-  }
+  // Token missing or expired - open modal
+  openAuthModal('signin', 'Please sign in with your account to proceed.');
   updateAuthBadge(false);
   return null;
 }
@@ -354,9 +471,50 @@ async function ensureAuthToken(forceRefresh = false) {
 function updateAuthBadge(ok) {
   if (!authStatusBadge) return;
   if (ok) {
-    authStatusBadge.className = "flex items-center space-x-2 text-[11px] font-medium text-slate-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full";
-    authStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-emerald-700 font-mono tracking-tight text-[10px] uppercase">Engine Online</span>`;
+    authStatusBadge.className = "flex items-center space-x-1.5 text-[11px] font-medium text-slate-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full";
+    authStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-emerald-700 font-mono tracking-tight text-[10px] uppercase">Ready</span>`;
   } else {
+    authStatusBadge.className = "flex items-center space-x-1.5 text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full";
+    authStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="text-slate-600 font-mono tracking-tight text-[10px] uppercase">Sign In</span>`;
+  }
+}
+
+// ── Docking Logic ─────────────────────────────────────────────────────────
+function toggleFormDock() {
+  isFormCollapsed = !isFormCollapsed;
+  if (isFormCollapsed) {
+    formColumn?.classList.add('hidden');
+    if (studioColumn) {
+      studioColumn.className = 'col-span-1 lg:col-span-12 flex flex-col gap-4 min-w-0 transition-all duration-300';
+    }
+    if (dockFormBtnText) dockFormBtnText.textContent = 'Show Input';
+    showToast('Input panel docked (Full-width view)');
+  } else {
+    formColumn?.classList.remove('hidden');
+    if (studioColumn) {
+      studioColumn.className = 'col-span-1 lg:col-span-7 flex flex-col gap-4 min-w-0 transition-all duration-300';
+    }
+    if (dockFormBtnText) dockFormBtnText.textContent = 'Full Width';
+  }
+}
+
+function toggleFileTreeDock() {
+  isFileTreeCollapsed = !isFileTreeCollapsed;
+  if (isFileTreeCollapsed) {
+    fileExplorerPanel?.classList.add('hidden');
+    if (docViewerPanel) {
+      docViewerPanel.className = 'col-span-1 md:col-span-12 flex flex-col bg-white min-w-0 transition-all duration-200';
+    }
+    if (dockTreeBtnText) dockTreeBtnText.textContent = 'Show Files';
+  } else {
+    fileExplorerPanel?.classList.remove('hidden');
+    if (docViewerPanel) {
+      docViewerPanel.className = 'col-span-1 md:col-span-8 flex flex-col bg-white min-w-0 transition-all duration-200';
+    }
+    if (dockTreeBtnText) dockTreeBtnText.textContent = 'Sidebar';
+  }
+}
+ else {
     authStatusBadge.className = "flex items-center space-x-2 text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full";
     authStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="text-slate-600 font-mono tracking-tight text-[10px] uppercase">Guest Mode</span>`;
   }
@@ -380,10 +538,10 @@ if (toggleScopeEditorBtn && scopeEditorContainer) {
     const isHidden = scopeEditorContainer.classList.contains('hidden');
     if (isHidden) {
       scopeEditorContainer.classList.remove('hidden');
-      toggleScopeEditorBtn.innerHTML = '<span>▾ Hide Raw Scope Text</span>';
+      toggleScopeEditorBtn.innerHTML = '<span class="inline-flex items-center gap-1.5">Hide Scope Text <svg class="w-3.5 h-3.5 inline-block ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></span>';
     } else {
       scopeEditorContainer.classList.add('hidden');
-      toggleScopeEditorBtn.innerHTML = '<span>▸ View / Edit Raw Scope Text</span>';
+      toggleScopeEditorBtn.innerHTML = '<span class="inline-flex items-center gap-1.5">View Scope Text <svg class="w-3.5 h-3.5 inline-block ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></span>';
     }
   });
 }
@@ -1228,7 +1386,7 @@ function finishUiThinkingAnimation() {
 if (generateUiBtn) {
   generateUiBtn.addEventListener('click', async () => {
     if (!currentScaffold || !currentScaffold.id) {
-      showToast('⚡ Please click "Generate Scaffold" first to create project specifications');
+      showToast('Please click "Generate Scaffold" first to create project specifications');
       return;
     }
 
@@ -1277,7 +1435,7 @@ if (generateUiBtn) {
       activeFileKey = 'ui';
       updateSidebarNavVisuals();
       renderActiveFileContent();
-      showToast('⚡ UI Prototype synthesized & rendered live!');
+      showToast('UI Prototype synthesized & rendered live!');
     } catch (err) {
       console.error('UI synthesis error:', err);
       showToast(`Synthesis failed: ${err.message}`);
@@ -1383,7 +1541,7 @@ async function triggerZipDownload(target = 'all') {
         downloadZipActionBtn.innerHTML = `
           <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-          </svg> Download .ZIP ▾`;
+          </svg> Download .ZIP <svg class="w-3.5 h-3.5 inline-block ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`;
       }
     }
   }
@@ -1412,7 +1570,7 @@ async function triggerZipDownload(target = 'all') {
         downloadZipActionBtn.innerHTML = `
           <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-          </svg> Download .ZIP ▾`;
+          </svg> Download .ZIP <svg class="w-3.5 h-3.5 inline-block ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`;
       }
     }
   }
@@ -1659,8 +1817,7 @@ function resetStudioToBlank() {
   if (aiAnalysisStatus) {
     aiAnalysisStatus.innerHTML = `
       <div class="flex items-center gap-2 text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded text-[11px] font-mono">
-        <span class="text-blue-500 font-bold">⚡</span>
-        <span>Drop a scope document to trigger 1st-place AI field extraction.</span>
+        <span>Upload a requirements document to automatically extract project details.</span>
       </div>
     `;
   }
@@ -1681,12 +1838,146 @@ if (resetStudioBtn) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  ensureAuthToken();
+
+// ── Wire Auth Modal & Forms ───────────────────────────────────────────────
+if (openAuthModalBtn) {
+  openAuthModalBtn.addEventListener('click', () => openAuthModal('signin'));
+}
+if (closeAuthModalBtn) {
+  closeAuthModalBtn.addEventListener('click', closeAuthModal);
+}
+if (authModal) {
+  authModal.addEventListener('click', (e) => {
+    if (e.target === authModal) closeAuthModal();
+  });
+}
+if (authTabSignInBtn) {
+  authTabSignInBtn.addEventListener('click', () => switchAuthTab('signin'));
+}
+if (authTabSignUpBtn) {
+  authTabSignUpBtn.addEventListener('click', () => switchAuthTab('signup'));
+}
+
+if (signInForm) {
+  signInForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAuthError();
+    const email = loginEmailInput?.value.trim();
+    const password = loginPasswordInput?.value;
+    if (!email || !password) {
+      showAuthError('Please enter both email and password.');
+      return;
+    }
+    const btn = document.getElementById('submitLoginBtn');
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch(`${API_BASE}/auth/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showAuthError(data.detail || 'Invalid email or password.');
+        if (btn) btn.disabled = false;
+        return;
+      }
+      authToken = data.access;
+      localStorage.setItem('specforge_token', authToken);
+      closeAuthModal();
+      await checkAuthStatus();
+      showToast('Signed in successfully');
+    } catch (err) {
+      showAuthError('Network error connecting to server.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+}
+
+if (signUpForm) {
+  signUpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAuthError();
+    const first_name = registerFirstNameInput?.value.trim() || '';
+    const last_name = registerLastNameInput?.value.trim() || '';
+    const email = registerEmailInput?.value.trim();
+    const password = registerPasswordInput?.value;
+    if (!email || !password) {
+      showAuthError('Please fill in all required fields.');
+      return;
+    }
+    const btn = document.getElementById('submitRegisterBtn');
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch(`${API_BASE}/auth/register/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, first_name, last_name }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const errorText = Object.values(data).flat().join(' ') || 'Registration failed.';
+        showAuthError(errorText);
+        if (btn) btn.disabled = false;
+        return;
+      }
+      // Log in immediately after register
+      const loginRes = await fetch(`${API_BASE}/auth/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        authToken = loginData.access;
+        localStorage.setItem('specforge_token', authToken);
+        closeAuthModal();
+        await checkAuthStatus();
+        showToast('Account created & signed in!');
+      } else {
+        switchAuthTab('signin');
+        showAuthError('Account created! Please sign in.');
+      }
+    } catch (err) {
+      showAuthError('Network error connecting to server.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+}
+
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('specforge_token');
+    localStorage.removeItem('agentforge_token');
+    renderLoggedOutUI();
+    updateAuthBadge(false);
+    showToast('Signed out');
+  });
+}
+
+// ── Wire Docking Buttons ──────────────────────────────────────────────────
+if (toggleFormDockBtn) {
+  toggleFormDockBtn.addEventListener('click', toggleFormDock);
+}
+if (collapseInputPanelBtn) {
+  collapseInputPanelBtn.addEventListener('click', toggleFormDock);
+}
+if (toggleFileTreeDockBtn) {
+  toggleFileTreeDockBtn.addEventListener('click', toggleFileTreeDock);
+}
+
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkAuthStatus();
   renderTechTags();
   updateSidebarNavVisuals();
   renderActiveFileContent();
   updateWordCount();
-  // Ensure pristine zero-caching state on load: do NOT load past database projects
   resetStudioToBlank();
 });
+

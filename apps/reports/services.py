@@ -1570,7 +1570,7 @@ def synthesize_dynamic_ui_prototype(scaffold: ProjectScaffold, analysis: dict = 
           </div>
           <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-code">
             <span>Domain Scope: <strong class="text-slate-800">{primary_entity} Management</strong></span>
-            <span class="text-emerald-600 font-semibold">● Active State Engine</span>
+            <span class="text-emerald-600 font-semibold">- Active State Engine</span>
           </div>
         </div>
 

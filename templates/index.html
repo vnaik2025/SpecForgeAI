@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>SpecForge AI — Autonomous Architecture & Agent Spec Engine</title>
-  <meta name="description" content="Paste your project scope. Define your exact tech stack. SpecForge AI synthesizes AGENT.md, ARCHITECTURE.md, SETUP.md, SKILLS.md, and API_SETUP.md — packaged as a root ZIP ready for execution.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⬛</text></svg>">
+  <title>SpecForge AI — Architecture & Specification Studio</title>
+  <meta name="description" content="Generate production-ready architecture blueprints, database schemas, and AI developer specifications from project requirements.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%232563eb%22 stroke-width=%222%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 d=%22M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z%22/><polyline points=%2214 2 14 8 20 8%22/><line x1=%2216%22 y1=%2213%22 x2=%228%22 y2=%2213%22/><line x1=%2216%22 y1=%2217%22 x2=%228%22 y2=%2217%22/><polyline points=%2210 9 9 9 8 9%22/></svg>">
 
   <!-- Google Fonts: Saira & JetBrains Mono -->
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -44,250 +44,46 @@
     }
   </script>
 
-  <!-- Markdown & Code Highlighting & JSZip -->
+  <!-- Marked.js for High-Fidelity Markdown Rendering -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- PDF.js for 100% full-text client-side extraction from uploaded PDFs -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    if (window['pdfjs-dist/build/pdf']) {
-      window.pdfjsLib = window['pdfjs-dist/build/pdf'];
-    }
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-  </script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2.2.0"/>
 
   <style>
-    /* Prevent any unwanted horizontal window blowout */
-    html, body {
-      max-width: 100vw;
-      overflow-x: hidden;
-    }
-
-    /* Compact engineering-grade scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-
-    body {
-      font-family: 'Saira', sans-serif;
-      background-color: #ffffff;
-      color: #0f172a;
-      letter-spacing: -0.01em;
-    }
-    .font-code {
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Markdown rendered styling inside viewer */
-    .markdown-rendered h1,
-    .markdown-rendered h2,
-    .markdown-rendered h3,
-    .markdown-rendered h4 {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: -0.01em;
-      color: #0f172a;
-      border-bottom: 1px solid #f1f5f9;
-      padding-bottom: 4px;
-      margin-top: 14px;
-      margin-bottom: 8px;
-    }
-    .markdown-rendered h1 { font-size: 13px; }
-    .markdown-rendered h2 { font-size: 12px; }
-    .markdown-rendered h3 { font-size: 11px; }
-    .markdown-rendered h4 { font-size: 11px; }
-    .markdown-rendered p {
-      color: #334155;
-      line-height: 1.6;
-      margin-bottom: 10px;
-      font-size: 11px;
-    }
-    .markdown-rendered ul,
-    .markdown-rendered ol {
-      padding-left: 18px;
-      margin-bottom: 10px;
-      color: #334155;
-      font-size: 11px;
-      line-height: 1.6;
-    }
-    .markdown-rendered ul { list-style-type: disc; }
+    .markdown-rendered h1 { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-top: 1.5rem; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+    .markdown-rendered h2 { font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+    .markdown-rendered h3 { font-size: 1.05rem; font-weight: 600; color: #334155; margin-top: 1rem; margin-bottom: 0.35rem; }
+    .markdown-rendered p { margin-bottom: 0.75rem; line-height: 1.6; color: #334155; }
+    .markdown-rendered ul, .markdown-rendered ol { margin-left: 1.5rem; margin-bottom: 0.75rem; list-style-type: disc; }
     .markdown-rendered ol { list-style-type: decimal; }
-    .markdown-rendered li { margin-bottom: 3px; }
-    .markdown-rendered strong { color: #0f172a; font-weight: 600; }
-    .markdown-rendered code:not(pre code) {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      background: #f1f5f9;
-      color: #0f172a;
-      padding: 1px 4px;
-      border-radius: 3px;
-      border: 1px solid #e2e8f0;
-    }
-    .markdown-rendered pre,
-    #rawMarkdownContent {
-      background-color: #f8fafc !important;
-      color: #0f172a !important;
-      border: 1px solid #e2e8f0 !important;
-      padding: 12px 14px !important;
-      border-radius: 6px !important;
-      font-family: 'JetBrains Mono', monospace !important;
-      font-size: 11px !important;
-      overflow-x: auto;
-      max-width: 100%;
-      line-height: 1.6;
-      margin-bottom: 12px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .markdown-rendered pre code {
-      background: transparent !important;
-      color: inherit !important;
-      border: none !important;
-      padding: 0 !important;
-    }
-    .markdown-rendered table {
-      width: 100%;
-      max-width: 100%;
-      border-collapse: collapse;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10.5px;
-      margin-bottom: 12px;
-      border: 1px solid #e2e8f0;
-      display: block;
-      overflow-x: auto;
-    }
-    .markdown-rendered th {
-      background: #f8fafc;
-      color: #334155;
-      font-weight: 600;
-      padding: 6px 10px;
-      border: 1px solid #e2e8f0;
-      text-align: left;
-    }
-    .markdown-rendered td {
-      padding: 6px 10px;
-      border: 1px solid #e2e8f0;
-      color: #1e293b;
-    }
-    .markdown-rendered tr:hover td {
-      background: #f8fafc;
-    }
-
-    /* AI Thinking Terminal */
-    #thinkingTerminal {
-      display: none;
-      background: #090d16;
-      border: 1px solid #1e293b;
-      border-radius: 6px;
-      padding: 10px 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10.5px;
-      color: #94a3b8;
-      position: relative;
-      overflow: hidden;
-    }
-    .terminal-scan {
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(56,189,248,0.7), transparent);
-      animation: scanAnim 2s linear infinite;
-    }
-    @keyframes scanAnim {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(120px); }
-    }
-    .think-line {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 3px;
-      line-height: 1.4;
-    }
-    .t-prefix {
-      color: #38bdf8;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-    .t-text {
-      color: #e2e8f0;
-    }
-    .think-cursor {
-      display: inline-block;
-      width: 5px;
-      height: 10px;
-      background: #38bdf8;
-      margin-left: 3px;
-      vertical-align: middle;
-      animation: cursorBlink 0.8s infinite;
-    }
-    @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-    /* Toast Notification */
-    .toast-notice {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 9999;
-      pointer-events: none;
-    }
-    .toast-notice.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    /* Tag chip delete button */
-    .tech-tag-chip button:hover {
-      color: #0f172a;
-    }
-
-    /* Drag & Drop zone active state */
-    #dropZoneBox.dragover {
-      background-color: #f1f5f9;
-      border-color: #0f172a;
-    }
-
-    @keyframes fieldHighlight {
-      0% { background-color: #ecfdf5; border-color: #10b981; }
-      100% { background-color: #ffffff; border-color: #cbd5e1; }
-    }
-    .highlight-populated {
-      animation: fieldHighlight 2s ease-out;
-    }
+    .markdown-rendered li { margin-bottom: 0.25rem; color: #334155; }
+    .markdown-rendered code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: #f1f5f9; padding: 0.15rem 0.35rem; border-radius: 0.25rem; color: #0f172a; border: 1px solid #e2e8f0; }
+    .markdown-rendered pre { background: #0f172a; color: #f8fafc; padding: 1rem; border-radius: 0.375rem; overflow-x: auto; margin-bottom: 1rem; }
+    .markdown-rendered pre code { background: transparent; padding: 0; color: inherit; border: none; }
+    .markdown-rendered table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.85rem; }
+    .markdown-rendered th { background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #0f172a; }
+    .markdown-rendered td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; color: #334155; }
+    .markdown-rendered tr:nth-child(even) { background: #f8fafc; }
+    .markdown-rendered blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; margin-left: 0; margin-bottom: 0.75rem; color: #475569; font-style: italic; background: #f8fafc; padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .tag-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
+    .toast-notice { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; transform: translateY(100px); opacity: 0; transition: all 0.25s ease-out; }
+    .toast-notice.show { transform: translateY(0); opacity: 1; }
   </style>
 </head>
-<body class="bg-white text-slate-900 w-full overflow-x-hidden flex flex-col min-h-screen selection:bg-slate-900 selection:text-white">
+<body class="bg-slate-50 text-slate-900 w-full overflow-x-hidden flex flex-col min-h-screen selection:bg-slate-900 selection:text-white">
 
   <!-- BEGIN: MainHeader -->
-  <header class="border-b border-slate-200 bg-white sticky top-0 z-50 px-4 sm:px-6 py-2.5 flex items-center justify-between" data-purpose="top-navigation">
+  <header class="border-b border-slate-200 bg-white sticky top-0 z-40 px-4 sm:px-6 py-2.5 flex items-center justify-between" data-purpose="top-navigation">
     <div class="flex items-center space-x-3 sm:space-x-6">
       <div class="flex items-center space-x-2.5">
-        <div class="w-7 h-7 bg-slate-900 text-white rounded flex items-center justify-center font-bold text-xs shadow-sm">
-          [S]
+        <div class="w-8 h-8 bg-slate-950 text-white rounded-md flex items-center justify-center font-bold text-xs shadow-xs">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
         </div>
         <div class="flex items-center space-x-2">
           <span class="font-bold text-sm tracking-tight text-slate-950">SpecForge <span class="text-blue-600">AI</span></span>
@@ -296,67 +92,95 @@
       </div>
       <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
       <!-- Live Engine Status Badge -->
-      <div id="authStatusBadge" class="flex items-center space-x-2 text-[11px] font-medium text-slate-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+      <div id="authStatusBadge" class="flex items-center space-x-1.5 text-[11px] font-medium text-slate-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span class="text-emerald-700 font-mono tracking-tight text-[10px] uppercase">Engine Online</span>
+        <span class="text-emerald-700 font-mono tracking-tight text-[10px] uppercase">Ready</span>
       </div>
     </div>
-    <!-- Navigation Actions -->
-    <nav class="flex items-center space-x-3 sm:space-x-5 text-xs font-medium text-slate-600">
-      <a class="hover:text-slate-900 transition-colors hidden md:inline-block" href="javascript:void(0)" onclick="alert('SpecForge AI v2.0 — Autonomous Architecture & Agent Specification Engine. Synthesizes production-ready AGENT.md, ARCHITECTURE.md, SETUP.md, SKILLS.md, and API_SETUP.md.')">Documentation</a>
+
+    <!-- Navigation & User Actions -->
+    <nav class="flex items-center space-x-3 sm:space-x-4 text-xs font-medium text-slate-600">
+      <a class="hover:text-slate-900 transition-colors hidden md:inline-flex items-center gap-1.5" href="javascript:void(0)" onclick="alert('SpecForge AI v2.0 - Autonomous Architecture & Specification Engine. Generates production-ready AGENT.md, ARCHITECTURE.md, SETUP.md, SKILLS.md, and API_SETUP.md.')">
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        <span>Guide</span>
+      </a>
       <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
-      <!-- Quick User Panel -->
-      <div class="flex items-center space-x-2 sm:space-x-2.5 sm:pl-2">
-        <div class="w-6 h-6 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-700">
-          DE
+
+      <!-- Auth State Widget (Unauthenticated State) -->
+      <div id="authNavGuest" class="flex items-center space-x-2">
+        <button type="button" id="openAuthModalBtn" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-950 hover:bg-slate-800 text-white rounded transition shadow-2xs cursor-pointer">
+          <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+          </svg>
+          <span>Sign In</span>
+        </button>
+      </div>
+
+      <!-- Auth State Widget (Authenticated State) -->
+      <div id="authNavUser" class="hidden flex items-center space-x-2.5 sm:space-x-3">
+        <div class="flex items-center space-x-2">
+          <div id="userInitialsAvatar" class="w-7 h-7 rounded-full bg-blue-100 border border-blue-200 text-blue-800 font-semibold text-xs flex items-center justify-center">
+            U
+          </div>
+          <div class="hidden sm:flex flex-col text-left">
+            <span id="userDisplayName" class="text-xs font-semibold text-slate-900 leading-tight">Developer</span>
+            <span id="userEmailDisplay" class="text-[10px] text-slate-500 font-mono leading-tight">user@example.com</span>
+          </div>
         </div>
-        <span class="text-xs text-slate-800 font-medium font-mono hidden sm:inline">dev@specforge.ai</span>
+        <button type="button" id="logoutBtn" title="Sign Out" class="text-xs text-slate-500 hover:text-red-600 transition p-1.5 rounded hover:bg-slate-100 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+          </svg>
+        </button>
       </div>
     </nav>
   </header>
   <!-- END: MainHeader -->
 
-  <!-- BEGIN: HeroSection -->
-  <section class="border-b border-slate-200 bg-slate-50/60 py-6 sm:py-8 px-4 sm:px-6 text-center" data-purpose="hero-banner">
-    <div class="max-w-4xl mx-auto flex flex-col items-center">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-[10.5px] sm:text-[11px] font-mono font-medium text-slate-700 mb-3 shadow-2xs">
-        <span class="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
-        AUTONOMOUS SPEC ENGINE • AI CODING AGENT READY
+  <!-- BEGIN: HeroSection (Clean, minimal, zero jargon) -->
+  <section class="border-b border-slate-200 bg-white py-6 sm:py-7 px-4 sm:px-6 text-center" data-purpose="hero-banner">
+    <div class="max-w-3xl mx-auto flex flex-col items-center">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[10.5px] font-mono font-medium text-slate-700 mb-2.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+        <span>Architecture & Specification Studio</span>
       </div>
-      <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-950">
-        Scope <span class="text-slate-400 font-normal">→</span> <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 bg-clip-text text-transparent">Production-Ready Agent Specs</span>
+      <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-950">
+        Turn Project Scope Into Production Architecture
       </h1>
-      <p class="mt-2.5 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-        Paste your project scope. Define your exact tech stack. SpecForge AI synthesizes <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">AGENT.md</code>, <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">ARCHITECTURE.md</code>, <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">SETUP.md</code>, and <code class="font-mono text-slate-900 bg-slate-200/60 px-1 py-0.5 rounded text-[11px]">API_SETUP.md</code> — packaged as a root ZIP ready for execution.
+      <p class="mt-2 text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
+        Upload or paste your requirements to automatically generate comprehensive architecture blueprints, database schemas, and AI developer specifications.
       </p>
     </div>
   </section>
   <!-- END: HeroSection -->
 
-  <!-- BEGIN: WorkstationStudio -->
-  <main class="flex-1 max-w-[1720px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6" data-purpose="dual-pane-studio">
+  <!-- BEGIN: WorkstationStudio (Dockable layout) -->
+  <main class="flex-1 max-w-[1780px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5" data-purpose="dockable-studio">
 
-    <!-- Column 1: Project Input Form -->
-    <div class="col-span-1 lg:col-span-5 flex flex-col gap-4">
+    <!-- Column 1: Project Input Form (Collapsible / Dockable) -->
+    <div id="formColumn" class="col-span-1 lg:col-span-5 flex flex-col gap-4 transition-all duration-300">
       <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs flex flex-col gap-4">
 
         <!-- Step Indicator & Header -->
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div class="flex items-center space-x-2">
             <span class="flex items-center justify-center w-5 h-5 bg-blue-600 text-white rounded-full text-[10px] font-bold">1</span>
-            <h2 class="text-xs uppercase font-bold tracking-wider text-slate-900 font-mono">Project Input</h2>
+            <h2 class="text-xs uppercase font-bold tracking-wider text-slate-900 font-mono">Project Requirements</h2>
           </div>
-          <span class="text-[10px] text-slate-400 font-mono uppercase">Interactive Form</span>
+          <button type="button" id="collapseInputPanelBtn" class="text-[10px] text-slate-400 hover:text-slate-700 font-mono flex items-center gap-1 transition" title="Collapse input panel to maximize studio">
+            <span>Dock Panel</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5"/></svg>
+          </button>
         </div>
 
         <form id="scaffoldForm" class="flex flex-col gap-4">
 
-          <!-- 1. Scope Document Dropzone & AI Analysis Phase (FIRST) -->
-          <div class="border border-slate-200 rounded-lg p-3.5 bg-slate-50/60 flex flex-col gap-2.5">
+          <!-- 1. Scope Document Dropzone & AI Analysis Phase -->
+          <div class="border border-slate-200 rounded-lg p-3.5 bg-slate-50/70 flex flex-col gap-2.5">
             <div class="flex items-center justify-between">
-              <label class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-                <span>1. Scope Document (Upload for Instant AI Extraction)</span>
+              <label class="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                <span>Scope Document or Requirements</span>
               </label>
             </div>
 
@@ -367,148 +191,137 @@
               class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-md p-4 bg-white flex flex-col items-center justify-center text-center cursor-pointer transition-all shadow-2xs group"
             >
               <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                 </svg>
               </div>
-              <span class="text-xs text-slate-800 font-medium">Drop scope file (.pdf, .txt, .md, .docx) or <span class="text-blue-600 underline font-semibold">browse</span></span>
-              <span class="text-[10px] text-slate-400 mt-0.5 font-mono">1st-place AI analysis extracts title &amp; tech stack automatically</span>
-              <input type="file" id="fileUploadInput" accept=".txt,.md,.markdown,.pdf,.doc,.docx,text/*" class="hidden" />
+              <p class="text-xs font-semibold text-slate-800">
+                Click to upload scope document
+              </p>
+              <p class="text-[11px] text-slate-500 mt-0.5">
+                Supports .txt, .md, .pdf, or .docx
+              </p>
             </label>
+            <input type="file" id="fileUploadInput" accept=".txt,.md,.markdown,.pdf,.doc,.docx,text/*" class="hidden"/>
 
-            <!-- AI 1st-Place Analysis Status Banner -->
-            <div id="aiAnalysisStatus" class="transition-all">
-              <div class="flex items-center gap-2 text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded text-[11px] font-mono">
-                <span class="text-blue-500 font-bold">⚡</span>
-                <span>Drop a scope document to trigger 1st-place AI field extraction.</span>
-              </div>
+            <!-- Inline AI Analysis Status -->
+            <div id="aiAnalysisStatus" class="transition-all"></div>
+
+            <!-- Toggle Paste Scope Area -->
+            <div class="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                id="toggleScopeEditorBtn"
+                class="text-[11px] font-mono text-blue-600 hover:text-blue-800 flex items-center gap-1 transition cursor-pointer"
+              >
+                <span>Or paste scope text</span>
+                <span id="scopeToggleChevron" class="inline-flex items-center"><svg class="w-3.5 h-3.5 inline-block ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></span>
+              </button>
+              <div id="wordCountBadge" class="text-[10px] font-mono text-slate-400">0 words</div>
             </div>
 
-            <!-- Scope Content Textarea (Collapsible / Editable) -->
-            <div class="mt-1">
-              <div class="flex items-center justify-between mb-1">
-                <button type="button" id="toggleScopeEditorBtn" class="text-[10.5px] font-mono text-slate-500 hover:text-slate-800 flex items-center gap-1">
-                  <span>▸ View / Edit Raw Scope Text</span>
-                </button>
-                <div id="wordCountBadge" class="text-[10px] font-mono text-slate-400">
-                  0 words • UTF-8
-                </div>
-              </div>
-              <div id="scopeEditorContainer" class="hidden">
-                <textarea
-                  id="scopeContentText"
-                  class="w-full text-xs font-mono bg-white border border-slate-300 rounded p-2.5 text-slate-800 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none leading-normal"
-                  rows="5"
-                  placeholder="Paste your raw project scope document, PRD, or user stories here, or drag &amp; drop a file above..."
-                  required
-                ></textarea>
-              </div>
+            <!-- Collapsible Scope Textarea -->
+            <div id="scopeEditorContainer" class="hidden">
+              <textarea
+                id="scopeContentText"
+                rows="6"
+                placeholder="Paste your project requirements, user stories, or feature scope here..."
+                class="w-full text-xs font-mono border border-slate-300 rounded p-2.5 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 resize-y bg-white"
+              ></textarea>
             </div>
           </div>
 
-          <!-- 2. Project Title Field (Populated by AI) -->
+          <!-- 2. Project Title Input -->
           <div id="projectTitleWrapper" class="transition-all">
-            <div class="flex justify-between items-center mb-1.5">
-              <label class="block text-xs font-semibold text-slate-800" for="projectTitle">2. Project Title</label>
-              <span id="titleSourceBadge" class="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded font-mono font-medium">Awaiting Scope</span>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-slate-800" for="projectTitle">Project Title</label>
+              <span id="titleSourceBadge" class="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded font-mono hidden">Auto-detected</span>
             </div>
             <input
-              class="w-full text-xs font-mono bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none transition"
-              id="projectTitle"
-              placeholder="e.g. Healthcare Patient Portal (upload a scope doc to auto-extract)"
               type="text"
-              value=""
-              required
+              id="projectTitle"
+              placeholder="e.g. HealthCare Equipment Management Portal"
+              class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"
             />
           </div>
 
-          <!-- 3. Categorized Tech Stack Breakdown & Tags (Populated by AI) -->
+          <!-- 3. Categorized Technology Stack -->
           <div id="techStackSection" class="transition-all flex flex-col gap-1.5">
             <div class="flex items-center justify-between">
-              <label class="text-xs font-semibold text-slate-800">3. Categorized Technology Stack</label>
-              <span id="techSourceBadge" class="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded font-mono font-medium">Awaiting Scope</span>
+              <label class="text-xs font-semibold text-slate-800">Target Tech Stack</label>
+              <span id="techSourceBadge" class="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded font-mono hidden">Auto-detected</span>
             </div>
 
-            <!-- Dynamic Categorized Pill Breakdown Strip -->
-            <div id="categorizedTechStackView" class="p-2.5 bg-slate-50 border border-slate-200 rounded text-[11px] font-mono flex flex-col gap-1.5">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="text-slate-400 font-semibold text-[10px] uppercase w-16">Frontend:</span>
-                <span id="catFrontend" class="text-slate-500 font-medium italic">Awaiting scope upload</span>
+            <!-- Auto-Categorized View -->
+            <div id="categorizedTechStackView" class="p-2.5 bg-slate-50 border border-slate-200 rounded text-[11px] font-mono space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-semibold text-[10px] uppercase">Frontend / Mobile:</span>
+                <span id="catFrontend" class="text-slate-600 font-medium">Awaiting input</span>
               </div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="text-slate-400 font-semibold text-[10px] uppercase w-16">Backend:</span>
-                <span id="catBackend" class="text-slate-500 font-medium italic">Awaiting scope upload</span>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-semibold text-[10px] uppercase">Backend API:</span>
+                <span id="catBackend" class="text-slate-600 font-medium">Awaiting input</span>
               </div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="text-slate-400 font-semibold text-[10px] uppercase w-16">Database:</span>
-                <span id="catDatabase" class="text-slate-500 font-medium italic">Awaiting scope upload</span>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-semibold text-[10px] uppercase">Database:</span>
+                <span id="catDatabase" class="text-slate-600 font-medium">Awaiting input</span>
               </div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="text-slate-400 font-semibold text-[10px] uppercase w-16">Services:</span>
-                <span id="catServices" class="text-slate-500 font-medium italic">Awaiting scope upload</span>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-semibold text-[10px] uppercase">Services:</span>
+                <span id="catServices" class="text-slate-600 font-medium">Awaiting input</span>
               </div>
             </div>
 
-            <!-- Editable Tech Stack Tags Input with Autocomplete -->
-            <div class="relative mt-1">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-[10.5px] text-slate-600 font-medium">Active Stack Tags (press Enter to add / click × to remove):</span>
-              </div>
-              <div
-                id="tagWrapper"
-                class="p-2 border border-slate-300 rounded bg-white flex flex-wrap gap-1.5 items-center min-h-[46px] cursor-text focus-within:ring-1 focus-within:ring-slate-900 focus-within:border-slate-900"
-              >
-                <!-- Populated dynamically by app.js -->
-                <input
-                  id="techTagInput"
-                  class="border-0 focus:ring-0 text-xs py-0.5 px-1 font-mono text-slate-600 placeholder-slate-400 min-w-[110px] flex-1 outline-none"
-                  placeholder="Upload scope to auto-populate or type here..."
-                  type="text"
-                  autocomplete="off"
-                />
-              </div>
-              <!-- Autocomplete Floating Dropdown -->
-              <div
-                id="techSuggestionsMenu"
-                class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto font-mono text-xs divide-y divide-slate-100"
-              ></div>
+            <!-- Tag Input -->
+            <div
+              id="tagWrapper"
+              class="flex flex-wrap items-center gap-1.5 p-2 bg-white border border-slate-300 rounded min-h-[38px] focus-within:ring-1 focus-within:ring-blue-600 focus-within:border-blue-600 transition"
+            >
+              <input
+                type="text"
+                id="techTagInput"
+                placeholder="Type and press Enter to add stack tags..."
+                class="text-xs border-0 p-0 focus:ring-0 flex-1 min-w-[140px] bg-transparent"
+              />
             </div>
+            <!-- Blueprint / Stack Suggestions -->
+            <div id="techSuggestionsMenu" class="flex flex-wrap gap-1 pt-1"></div>
           </div>
 
-          <!-- 4. Additional VIP Notes / Specific Directives (Optional) -->
+          <!-- 4. Custom Notes (Optional) -->
           <div>
-            <div class="flex justify-between items-center mb-1.5">
-              <label class="block text-xs font-semibold text-slate-800" for="customNotes">4. Additional VIP Notes / Specific Directives (Optional)</label>
-              <span class="text-[10px] text-slate-400 font-mono">User Directives</span>
-            </div>
+            <label class="block text-xs font-semibold text-slate-800 mb-1" for="customNotes">
+              Special Requirements (Optional)
+            </label>
             <textarea
-              class="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded p-2.5 text-slate-800 focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none leading-relaxed"
               id="customNotes"
               rows="2"
-              placeholder=""
+              placeholder="e.g. Include Flutter mobile app, use JWT authentication, enable offline cache..."
+              class="w-full text-xs font-mono border border-slate-300 rounded p-2 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"
             ></textarea>
           </div>
 
-          <!-- AI Thinking Terminal Animation -->
-          <div id="thinkingTerminal">
-            <div class="terminal-scan"></div>
-            <div class="flex items-center space-x-2 text-[10px] text-sky-400 uppercase tracking-wider mb-2 font-bold">
-              <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
-              <span>Autonomous Agent Synthesis Engine</span>
+          <!-- Generation Status Console -->
+          <div id="thinkingTerminal" class="hidden p-3 bg-slate-900 rounded-md font-mono text-[11px] text-slate-300 border border-slate-800 space-y-1 shadow-inner">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-1 mb-1.5 text-slate-400 text-[10px] uppercase tracking-wider">
+              <span class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                <span>Specification Synthesis Status</span>
+              </span>
             </div>
             <div id="thinkingLines" class="space-y-1"></div>
           </div>
 
-          <!-- Primary Generation CTA -->
+          <!-- Action Button -->
           <button
-            id="submitGenerateBtn"
-            class="w-full bg-slate-900 hover:bg-black text-white text-xs font-semibold py-3 px-4 rounded-md shadow flex items-center justify-center gap-2 transition cursor-pointer"
             type="submit"
+            id="submitGenerateBtn"
+            class="w-full py-2.5 px-4 bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs rounded transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
           >
-            <svg class="w-4 h-4 text-blue-400 fill-current" viewBox="0 0 20 20">
-              <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11.414V14a1 1 0 11-2 0v-.586l-2.293-2.293a1 1 0 011.414-1.414L9 10.586V6a1 1 0 112 0v4.586l.879-.879a1 1 0 111.414 1.414L11 13.414z"></path>
+            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
             </svg>
-            <span>Generate Scaffold &amp; Spec Files</span>
+            <span>Generate Specifications</span>
           </button>
 
         </form>
@@ -516,22 +329,52 @@
       </div>
     </div>
 
-    <!-- Column 2: Specification Studio -->
-    <div class="col-span-1 lg:col-span-7 flex flex-col gap-4 min-w-0">
+    <!-- Column 2: Specification Studio (Dockable / Expandable) -->
+    <div id="studioColumn" class="col-span-1 lg:col-span-7 flex flex-col gap-4 min-w-0 transition-all duration-300">
       <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs flex flex-col h-full min-w-0">
 
-        <!-- Studio Header -->
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <!-- Studio Header with Dock & Viewport Controls -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
           <div class="flex items-center space-x-2">
             <span class="flex items-center justify-center w-5 h-5 bg-emerald-600 text-white rounded-full text-[10px] font-bold">2</span>
             <h2 class="text-xs uppercase font-bold tracking-wider text-slate-900 font-mono">Specification Studio</h2>
           </div>
-          <div class="flex items-center gap-2">
-            <button type="button" id="resetStudioBtn" class="px-2 py-0.5 rounded text-[10.5px] font-mono text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 transition" title="Reset all fields and studio to blank state">
-              ↺ Reset
+
+          <!-- Dock Controls & Actions -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <!-- Dock Form Toggle Button -->
+            <button
+              type="button"
+              id="toggleFormDockBtn"
+              class="px-2 py-1 rounded text-[10.5px] font-mono text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition flex items-center gap-1 cursor-pointer"
+              title="Expand Studio to Full Width (Dock Input Form)"
+            >
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/>
+              </svg>
+              <span id="dockFormBtnText">Full Width</span>
             </button>
+
+            <!-- Dock File Tree Toggle Button -->
+            <button
+              type="button"
+              id="toggleFileTreeDockBtn"
+              class="px-2 py-1 rounded text-[10.5px] font-mono text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition flex items-center gap-1 cursor-pointer"
+              title="Collapse / Expand File Tree Sidebar"
+            >
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"/>
+              </svg>
+              <span id="dockTreeBtnText">Sidebar</span>
+            </button>
+
+            <button type="button" id="resetStudioBtn" class="px-2 py-1 rounded text-[10.5px] font-mono text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 transition flex items-center gap-1 cursor-pointer" title="Reset all fields and studio">
+              <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+              <span>Reset</span>
+            </button>
+
             <span id="totalFilesBadge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200">
-              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> 0 ARTIFACTS
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> 0 FILES
             </span>
           </div>
         </div>
@@ -541,13 +384,14 @@
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <span id="projectBannerTitle" class="text-xs font-bold text-slate-900">Awaiting Project Scope</span>
-              <span id="projectStatusPill" class="text-[10px] text-slate-600 font-mono bg-slate-200 px-1.5 rounded">No Active Spec</span>
+              <span id="projectStatusPill" class="text-[10px] text-slate-600 font-mono bg-slate-200 px-1.5 rounded">No Active Project</span>
             </div>
             <div id="projectStackTagsContainer" class="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <span class="text-[10px] font-mono text-slate-500">Stack:</span>
               <span class="text-[10px] font-mono text-slate-400 italic">None</span>
             </div>
           </div>
+
           <!-- Download / Action Buttons -->
           <div class="flex items-center gap-2 flex-wrap">
             <button
@@ -555,21 +399,22 @@
               type="button"
               class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-[11px] font-mono font-medium flex items-center gap-1 shadow-2xs transition cursor-pointer"
             >
-              <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/>
               </svg>
-              <span>Synthesize UI</span>
+              <span>Interactive UI</span>
             </button>
             <button
               id="copyPromptActionBtn"
               type="button"
-              class="px-2.5 py-1.5 bg-white border border-slate-300 hover:border-slate-400 rounded text-[11px] font-mono text-slate-700 flex items-center gap-1 shadow-2xs transition"
+              class="px-2.5 py-1.5 bg-white border border-slate-300 hover:border-slate-400 rounded text-[11px] font-mono text-slate-700 flex items-center gap-1 shadow-2xs transition cursor-pointer"
             >
-              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"/>
               </svg>
               <span>Copy Kickoff Prompt</span>
             </button>
+
             <!-- Download ZIP Dropdown -->
             <div class="relative inline-block text-left" id="downloadZipDropdownContainer">
               <button
@@ -578,18 +423,18 @@
                 class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-[11px] font-mono font-medium text-white flex items-center gap-1 shadow-2xs transition cursor-pointer"
                 title="Download Specifications as ZIP"
               >
-                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                 </svg>
-                <span>Download .ZIP ▾</span>
+                <span>Download ZIP</span>
               </button>
-              <div id="downloadZipMenu" class="hidden absolute right-0 mt-1.5 w-60 rounded-md shadow-xl bg-white border border-slate-200 ring-1 ring-black/5 z-50 divide-y divide-slate-100 font-sans animate-in fade-in zoom-in-95 duration-100">
+              <div id="downloadZipMenu" class="hidden absolute right-0 mt-1.5 w-60 rounded-md shadow-xl bg-white border border-slate-200 ring-1 ring-black/5 z-50 divide-y divide-slate-100 font-sans">
                 <div class="py-1">
                   <button type="button" id="downloadAllZipBtn" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center justify-between group transition">
                     <span class="flex items-center gap-2">
-                      <span class="text-base">📦</span>
+                      <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
                       <span>
-                        <span class="font-semibold block text-slate-800 group-hover:text-emerald-900">Full Project ZIP</span>
+                        <span class="font-semibold block text-slate-800 group-hover:text-emerald-900">Complete Project ZIP</span>
                         <span class="text-[10px] text-slate-400 block">frontend/ + backend/ + SCOPE.md</span>
                       </span>
                     </span>
@@ -599,7 +444,7 @@
                 <div class="py-1">
                   <button type="button" id="downloadFrontendZipBtn" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-blue-50 hover:text-blue-800 flex items-center justify-between group transition">
                     <span class="flex items-center gap-2">
-                      <span class="text-base">🎨</span>
+                      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/></svg>
                       <span>
                         <span class="font-semibold block text-slate-800 group-hover:text-blue-900">Frontend Specs ZIP</span>
                         <span class="text-[10px] text-slate-400 block">frontend/ folder + UI Prototype</span>
@@ -609,7 +454,7 @@
                   </button>
                   <button type="button" id="downloadBackendZipBtn" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-800 flex items-center justify-between group transition">
                     <span class="flex items-center gap-2">
-                      <span class="text-base">⚙️</span>
+                      <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.75 5.1a3 3 0 012.4-1.1h7.7a3 3 0 012.4 1.1l2.1 3.45a4.5 4.5 0 01.9 2.7"/></svg>
                       <span>
                         <span class="font-semibold block text-slate-800 group-hover:text-amber-900">Backend Specs ZIP</span>
                         <span class="text-[10px] text-slate-400 block">backend/ folder specifications</span>
@@ -623,13 +468,13 @@
           </div>
         </div>
 
-        <!-- Dual Split: File Explorer + Markdown Pane -->
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-12 border border-slate-200 rounded-md overflow-hidden flex-1 min-h-[520px]">
+        <!-- Dual Split: File Explorer + Markdown Viewer (Dockable) -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-12 border border-slate-200 rounded-md overflow-hidden flex-1 min-h-[540px]">
 
-          <!-- File Explorer (Sidebar) -->
-          <div class="col-span-1 md:col-span-4 bg-slate-50/70 border-b md:border-b-0 md:border-r border-slate-200 p-2.5 flex flex-col font-mono text-xs overflow-y-auto max-h-[720px]">
+          <!-- File Explorer (Sidebar - Dockable) -->
+          <div id="fileExplorerPanel" class="col-span-1 md:col-span-4 bg-slate-50/70 border-b md:border-b-0 md:border-r border-slate-200 p-2.5 flex flex-col font-mono text-xs overflow-y-auto max-h-[720px] transition-all duration-200">
             <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-1 mb-1 tracking-wider flex items-center justify-between">
-              <span>/ PROJECT-ROOT</span>
+              <span>PROJECT ROOT</span>
               <span class="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.2 rounded font-mono font-medium">14 files</span>
             </div>
 
@@ -735,32 +580,38 @@
             </div>
 
             <div class="mt-auto pt-3 border-t border-slate-200">
-              <div id="specStatusDisplay" class="text-[10px] text-slate-400">Status: Uninitialized</div>
-              <div id="specShaDisplay" class="text-[10px] text-slate-400 font-mono">SHA: —</div>
+              <div id="specStatusDisplay" class="text-[10px] text-slate-400">Status: Ready</div>
+              <div id="specShaDisplay" class="text-[10px] text-slate-400 font-mono hidden">SHA: —</div>
             </div>
           </div>
 
-          <!-- Document Viewer Header & Content (Markdown Pane / UI Sandbox) -->
-          <div class="col-span-1 md:col-span-8 flex flex-col bg-white min-w-0">
+          <!-- Document Viewer Header & Content (Markdown Pane / UI Sandbox - Dockable) -->
+          <div id="docViewerPanel" class="col-span-1 md:col-span-8 flex flex-col bg-white min-w-0 transition-all duration-200">
             <!-- Tab Controls -->
-            <div class="flex flex-wrap gap-2 items-center justify-between border-b border-slate-200 px-4 py-2 bg-slate-50/40">
+            <div class="flex flex-wrap gap-2 items-center justify-between border-b border-slate-200 px-4 py-2 bg-slate-50/50">
               <div class="flex items-center gap-2">
                 <span id="currentViewerFilename" class="text-xs font-mono font-bold text-slate-800">AGENT.md</span>
-                <span id="currentViewerFilesize" class="text-[10px] font-mono text-slate-400">14.8 KB</span>
+                <span id="currentViewerFilesize" class="text-[10px] font-mono text-slate-400">0 KB</span>
               </div>
               <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
                 <button type="button" id="launchToolbarBigWindowBtn" class="hidden text-[11px] font-mono px-2.5 py-0.5 rounded bg-indigo-600 hover:bg-indigo-700 font-bold text-white shadow-2xs transition items-center gap-1 cursor-pointer">
-                  <svg class="w-3 h-3 text-white inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                  <span>⛶ Big Window</span>
+                  <svg class="w-3 h-3 text-white inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/></svg>
+                  <span>Fullscreen</span>
                 </button>
                 <button type="button" id="openExternalUiBtn" title="Open in new window" class="hidden text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition items-center gap-1">
-                  <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                  <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                   <span>New Tab</span>
                 </button>
-                <button type="button" id="modePreviewBtn" class="text-[11px] font-mono px-2 py-0.5 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 transition">Preview</button>
+                <button type="button" id="modePreviewBtn" class="text-[11px] font-mono px-2.5 py-0.5 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 transition">Preview</button>
                 <button type="button" id="modeRawBtn" class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition">Raw</button>
-                <button type="button" id="copyCurrentFileBtn" class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition">Copy</button>
-                <button type="button" id="downloadCurrentFileBtn" class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition">↓ .md</button>
+                <button type="button" id="copyCurrentFileBtn" class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition flex items-center gap-1">
+                  <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/></svg>
+                  <span>Copy</span>
+                </button>
+                <button type="button" id="downloadCurrentFileBtn" class="text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition flex items-center gap-1">
+                  <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                  <span>.md</span>
+                </button>
               </div>
             </div>
 
@@ -769,7 +620,7 @@
               <div id="renderedMarkdownContent" class="markdown-rendered space-y-4 min-w-0"></div>
               <pre id="rawMarkdownContent" class="hidden bg-slate-50 text-slate-800 border border-slate-200 p-4 rounded-md font-mono text-xs overflow-x-auto leading-relaxed whitespace-pre-wrap"></pre>
               
-              <!-- UI Prototype Launchpad Card (Unconstrained Big Window) -->
+              <!-- UI Prototype Launchpad Card -->
               <div id="uiPrototypeContainer" class="hidden flex flex-col gap-4 w-full">
                 <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 sm:p-5 flex flex-col gap-3.5 shadow-2xs">
                   <div class="flex items-center justify-between flex-wrap gap-2.5">
@@ -782,39 +633,43 @@
                       <button
                         type="button"
                         id="launchBigWindowBtn"
-                        class="px-3.5 py-1.5 bg-slate-900 hover:bg-black text-white rounded text-xs font-mono font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                        class="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 text-white rounded text-xs font-mono font-medium flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                       >
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                        <span>Open Big Window View</span>
+                        <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/></svg>
+                        <span>Open Fullscreen Canvas</span>
                       </button>
                       <button
                         type="button"
                         id="launchExternalTabBtn"
                         class="px-3 py-1.5 bg-white border border-slate-300 hover:border-slate-400 text-slate-700 rounded text-xs font-mono font-medium flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
                       >
-                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                         <span>New Tab</span>
                       </button>
                     </div>
                   </div>
                   <p class="text-xs text-slate-600 leading-relaxed">
-                    View this application in the full-scale <strong>Big Window Canvas</strong> with real device viewports (Desktop, Laptop, Tablet, Mobile) and live interactivity, or expand the embedded preview below.
+                    Interactive Single-Page Application prototype synthesized directly from your scope requirements.
                   </p>
                 </div>
 
                 <!-- Collapsible Inline Frame Toggle -->
                 <div class="flex items-center justify-between border-t border-slate-100 pt-3">
-                  <span class="text-[11px] font-mono text-slate-500">Embedded preview within studio:</span>
-                  <button type="button" id="toggleInlineFrameBtn" class="text-[11px] font-mono text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer">
-                    Show Embedded View ↓
+                  <span class="text-[11px] font-mono text-slate-500">Embedded preview in studio:</span>
+                  <button type="button" id="toggleInlineFrameBtn" class="text-[11px] font-mono text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer flex items-center gap-1">
+                    <span>Show Embedded Preview</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                   </button>
                 </div>
 
                 <!-- Embedded Preview Container -->
                 <div id="inlineFrameContainer" class="hidden transition-all duration-300 border border-slate-300 rounded shadow-xs bg-white overflow-hidden">
                   <div class="px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                    <span>Embedded Sandbox Frame (Reduced Scale)</span>
-                    <button type="button" id="inlineExpandToBigBtn" class="text-indigo-600 hover:text-indigo-800 font-bold">⛶ Expand to Big Window</button>
+                    <span>Interactive Sandbox</span>
+                    <button type="button" id="inlineExpandToBigBtn" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/></svg>
+                      <span>Expand</span>
+                    </button>
                   </div>
                   <iframe id="uiPrototypeIframe" class="w-full h-[480px] border-0" sandbox="allow-scripts allow-forms allow-same-origin allow-modals"></iframe>
                 </div>
@@ -834,55 +689,56 @@
   <footer class="border-t border-slate-200 bg-white px-4 sm:px-6 py-2.5 text-xs text-slate-500 font-mono flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mt-auto" data-purpose="status-bar">
     <div class="flex items-center space-x-2 sm:space-x-4 flex-wrap gap-y-1">
       <div class="flex items-center space-x-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span class="text-slate-800 font-medium text-[11px]">Daemon Running (Port 8000)</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <span class="text-slate-800 font-medium text-[11px]">System Ready</span>
       </div>
       <span class="hidden sm:inline">•</span>
-      <span class="text-[11px]">Active Spec: <strong id="footerActiveSpec" class="text-slate-900">None</strong></span>
+      <span class="text-[11px]">Active Project: <strong id="footerActiveSpec" class="text-slate-900">None</strong></span>
       <span class="hidden sm:inline">•</span>
-      <span class="text-[11px]">Output: <code id="footerOutputPath" class="text-slate-700">./dist/spec.zip</code></span>
+      <span class="text-[11px] hidden">Output: <code id="footerOutputPath" class="text-slate-700">./dist/spec.zip</code></span>
     </div>
     <div class="flex items-center space-x-2 sm:space-x-4 text-[11px] flex-wrap">
-      <span>Memory: 114MB / 1.0GB</span>
-      <span>•</span>
-      <span>SpecForge AI Engine v2.0-prod</span>
+      <span>SpecForge AI</span>
     </div>
   </footer>
   <!-- END: MainFooter -->
 
-  <!-- Fullscreen UI Prototype Big Window Canvas Modal -->
+  <!-- Fullscreen UI Prototype Big Window Canvas Modal (Zero emojis, crisp icons) -->
   <div id="uiCanvasModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex flex-col p-2 sm:p-4 md:p-6 transition-all duration-200">
     <div class="bg-white border border-slate-300 rounded-lg shadow-2xl w-full h-full flex flex-col overflow-hidden max-w-[1920px] mx-auto">
       
-      <!-- Top Chrome Bar -->
+      <!-- Top Bar -->
       <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-2 items-center justify-between font-mono text-xs">
-        <!-- Left: Status & Identity -->
+        <!-- Left: Identity -->
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-6 h-6 rounded bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">
-            ⚡
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-2">
               <span id="canvasProjectTitle" class="font-bold text-slate-900 truncate">UI_PROTOTYPE.html</span>
               <span class="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold uppercase">Interactive Preview</span>
             </div>
-            <div class="text-[10px] text-slate-400">Sandboxed Environment • Zero Build Step Single-File SPA</div>
           </div>
         </div>
 
-        <!-- Center: Device Viewport Presets -->
+        <!-- Center: Device Viewport Presets (Clean SVGs) -->
         <div class="flex items-center space-x-1 border border-slate-200 rounded p-0.5 bg-slate-200/60 overflow-x-auto max-w-full">
-          <button type="button" id="modalVpDesktopBtn" class="px-2.5 py-1 rounded text-[11px] font-mono font-bold bg-white text-slate-900 shadow-2xs transition cursor-pointer whitespace-nowrap">
-            🖥️ Desktop (100%)
+          <button type="button" id="modalVpDesktopBtn" class="px-2.5 py-1 rounded text-[11px] font-mono font-bold bg-white text-slate-900 shadow-2xs transition cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/></svg>
+            <span>Desktop</span>
           </button>
-          <button type="button" id="modalVpLaptopBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap">
-            💻 Laptop (1280px)
+          <button type="button" id="modalVpLaptopBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"/></svg>
+            <span>Laptop (1280px)</span>
           </button>
-          <button type="button" id="modalVpTabletBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap">
-            📱 Tablet (768px)
+          <button type="button" id="modalVpTabletBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5h3m-6.75 2.25h10.5a2.25 2.25 0 002.25-2.25V4.5a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 4.5v15a2.25 2.25 0 002.25 2.25z"/></svg>
+            <span>Tablet (768px)</span>
           </button>
-          <button type="button" id="modalVpMobileBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap">
-            📲 Mobile (390px)
+          <button type="button" id="modalVpMobileBtn" class="px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
+            <span>Mobile (390px)</span>
           </button>
         </div>
 
@@ -894,7 +750,7 @@
             class="px-2.5 py-1 bg-white border border-slate-300 hover:border-slate-400 rounded text-[11px] font-mono text-slate-700 flex items-center gap-1 shadow-2xs transition cursor-pointer whitespace-nowrap"
             title="Open in new browser tab"
           >
-            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
             <span>New Tab</span>
           </button>
           <button
@@ -902,8 +758,8 @@
             id="modalDownloadHtmlBtn"
             class="px-2.5 py-1 bg-white border border-slate-300 hover:border-slate-400 rounded text-[11px] font-mono text-slate-700 flex items-center gap-1 shadow-2xs transition cursor-pointer whitespace-nowrap"
           >
-            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            <span>Download .html</span>
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            <span>Download HTML</span>
           </button>
           <button
             type="button"
@@ -911,13 +767,13 @@
             class="px-2.5 py-1 bg-slate-900 hover:bg-black text-white rounded text-[11px] font-mono font-medium flex items-center gap-1 transition cursor-pointer whitespace-nowrap"
           >
             <span>Close</span>
-            <span class="text-slate-400 font-bold ml-0.5">✕</span>
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
       </div>
 
       <!-- Canvas Area with Centered Resizable Frame -->
-      <div class="flex-1 bg-slate-100/90 p-3 sm:p-5 flex items-center justify-center overflow-auto min-h-0">
+      <div class="flex-1 bg-slate-100 p-3 sm:p-5 flex items-center justify-center overflow-auto min-h-0">
         <div id="modalIframeWrapper" class="w-full h-full max-w-full transition-all duration-300 bg-white rounded-md shadow-md border border-slate-300 overflow-hidden flex flex-col">
           <iframe id="modalUiPrototypeIframe" class="w-full h-full border-0 bg-white flex-1" sandbox="allow-scripts allow-forms allow-same-origin allow-modals"></iframe>
         </div>
@@ -926,8 +782,87 @@
     </div>
   </div>
 
+  <!-- AUTHENTICATION MODAL (Secure Sign In / Sign Up Dialog) -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center space-x-2">
+          <div class="w-6 h-6 bg-slate-950 text-white rounded flex items-center justify-center text-xs font-bold">
+            <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+          </div>
+          <span class="font-bold text-sm text-slate-900">SpecForge Account</span>
+        </div>
+        <button type="button" id="closeAuthModalBtn" class="text-slate-400 hover:text-slate-600 transition p-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Tab Switcher: Sign In vs Create Account -->
+      <div class="flex border-b border-slate-100 bg-slate-50 text-xs font-semibold">
+        <button type="button" id="authTabSignInBtn" class="flex-1 py-3 text-center text-blue-600 border-b-2 border-blue-600 bg-white transition cursor-pointer">
+          Sign In
+        </button>
+        <button type="button" id="authTabSignUpBtn" class="flex-1 py-3 text-center text-slate-500 hover:text-slate-900 transition cursor-pointer">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6">
+        <!-- Error Banner -->
+        <div id="authErrorMessage" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-start gap-2">
+          <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+          <span id="authErrorText">Authentication failed.</span>
+        </div>
+
+        <!-- Sign In Form -->
+        <form id="signInForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" for="loginEmailInput">Email Address</label>
+            <input type="email" id="loginEmailInput" required placeholder="developer@example.com" class="w-full text-xs border border-slate-300 rounded p-2.5 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"/>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" for="loginPasswordInput">Password</label>
+            <input type="password" id="loginPasswordInput" required placeholder="••••••••" class="w-full text-xs border border-slate-300 rounded p-2.5 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"/>
+          </div>
+          <button type="submit" id="submitLoginBtn" class="w-full py-2.5 px-4 bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs rounded transition flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+            <span>Sign In</span>
+          </button>
+        </form>
+
+        <!-- Create Account Form (Hidden by default) -->
+        <form id="signUpForm" class="hidden space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" for="registerFirstNameInput">First Name</label>
+              <input type="text" id="registerFirstNameInput" required placeholder="Alex" class="w-full text-xs border border-slate-300 rounded p-2.5 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"/>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" for="registerLastNameInput">Last Name</label>
+              <input type="text" id="registerLastNameInput" required placeholder="Developer" class="w-full text-xs border border-slate-300 rounded p-2.5 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"/>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" for="registerEmailInput">Email Address</label>
+            <input type="email" id="registerEmailInput" required placeholder="alex@example.com" class="w-full text-xs border border-slate-300 rounded p-2.5 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"/>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" for="registerPasswordInput">Password</label>
+            <input type="password" id="registerPasswordInput" minlength="8" required placeholder="At least 8 characters" class="w-full text-xs border border-slate-300 rounded p-2.5 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"/>
+          </div>
+          <button type="submit" id="submitRegisterBtn" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded transition flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+            <span>Create Account</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
   <div id="toastNotice" class="toast-notice"></div>
 
-  <script src="{% static 'js/app.js' %}?v=2.1.0"></script>
+  <script src="{% static 'js/app.js' %}?v=2.2.0"></script>
 </body>
 </html>
