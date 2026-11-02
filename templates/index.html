@@ -908,6 +908,28 @@
 
   <div id="toastNotice" class="toast-notice"></div>
 
-  <script src="{% static 'js/app.js' %}?v=2.2.0"></script>
+    <!-- Firebase App, Authentication, and Firestore SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDgDBc_Gzal6aN5tJfkWjHXAakHLxxKBHI",
+      authDomain: "specforgeai-9244d.firebaseapp.com",
+      projectId: "specforgeai-9244d",
+      storageBucket: "specforgeai-9244d.firebasestorage.app",
+      messagingSenderId: "115706137648",
+      appId: "1:115706137648:web:63afd49457d46b9daa71f5"
+    };
+    if (window.firebase) {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      window.fbAuth = firebase.auth();
+      window.fbDb = firebase.firestore();
+    }
+  </script>
+  <script src="{% static 'js/app.js' %}?v=2.3.0"></script>
 </body>
 </html>

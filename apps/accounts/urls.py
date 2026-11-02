@@ -9,4 +9,5 @@ urlpatterns = [
     path("login/", views.LoginView.as_view(), name="login"),
     path("token/refresh/", views.RefreshView.as_view(), name="token_refresh"),
     path("me/", views.MeView.as_view(), name="me"),
+    path("firebase-sync/", views.FirebaseSyncView.as_view(), name="firebase_sync"),
 ]

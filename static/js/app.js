@@ -511,6 +511,25 @@ async function ensureAuthToken(forceRefresh = false) {
     } catch (e) {}
   }
 
+  // Check Firebase active session
+  if (window.fbAuth && window.fbAuth.currentUser) {
+    try {
+      const idToken = await window.fbAuth.currentUser.getIdToken(forceRefresh);
+      const syncData = await syncUserWithBackend({
+        id_token: idToken,
+        email: window.fbAuth.currentUser.email,
+        uid: window.fbAuth.currentUser.uid
+      });
+      if (syncData && syncData.access) {
+        authToken = syncData.access;
+        updateAuthBadge(true);
+        return authToken;
+      }
+    } catch (fbErr) {
+      console.warn('Firebase token refresh attempt:', fbErr);
+    }
+  }
+
   // If token is near expiration or forceRefresh, try refreshing first
   if (refreshToken) {
     const refreshed = await refreshAuthToken();
@@ -2017,6 +2036,107 @@ if (authTabSignUpBtn) {
   authTabSignUpBtn.addEventListener('click', () => switchAuthTab('signup'));
 }
 
+// ── Firebase Auth & Firestore Integration ─────────────────────────────────
+function formatFirebaseErrorMessage(err) {
+  if (!err) return 'Authentication failed. Please try again.';
+  const code = err.code || '';
+  switch (code) {
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/user-disabled':
+      return 'This user account has been disabled.';
+    case 'auth/user-not-found':
+      return 'No account found with this email. Please check your credentials or create an account.';
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return 'Incorrect email or password. Please try again.';
+    case 'auth/email-already-in-use':
+      return 'An account with this email address already exists. Please sign in instead.';
+    case 'auth/weak-password':
+      return 'Password should be at least 8 characters long.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please try again in a few moments.';
+    case 'auth/network-request-failed':
+      return 'Network connection error. Please check your internet connection.';
+    case 'auth/operation-not-allowed':
+      return 'Email/Password sign-in is not enabled in Firebase Console.';
+    default:
+      return err.message || 'Authentication error. Please try again.';
+  }
+}
+
+async function syncUserWithBackend(payload) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/firebase-sync/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.access) {
+        authToken = data.access;
+        refreshToken = data.refresh || null;
+        localStorage.setItem('specforge_access_token', authToken);
+        localStorage.setItem('specforge_token', authToken);
+        if (refreshToken) {
+          localStorage.setItem('specforge_refresh_token', refreshToken);
+        }
+      }
+      return data;
+    }
+  } catch (err) {
+    console.warn('Backend user sync warning:', err);
+  }
+  return null;
+}
+
+function initFirebaseAuthListener() {
+  if (!window.fbAuth) return;
+  window.fbAuth.onAuthStateChanged(async (fbUser) => {
+    if (fbUser) {
+      try {
+        let userProfile = null;
+        if (window.fbDb) {
+          try {
+            const userDoc = await window.fbDb.collection('users').doc(fbUser.uid).get();
+            if (userDoc && userDoc.exists) {
+              userProfile = userDoc.data();
+            }
+          } catch (fsErr) {
+            console.warn('Firestore read error in onAuthStateChanged:', fsErr);
+          }
+        }
+        const firstName = userProfile?.firstName || (fbUser.displayName ? fbUser.displayName.split(' ')[0] : '');
+        const lastName = userProfile?.lastName || (fbUser.displayName ? fbUser.displayName.split(' ').slice(1).join(' ') : '');
+        const idToken = await fbUser.getIdToken();
+        const syncData = await syncUserWithBackend({
+          id_token: idToken,
+          email: fbUser.email,
+          uid: fbUser.uid,
+          first_name: firstName,
+          last_name: lastName
+        });
+        currentUser = {
+          email: fbUser.email,
+          first_name: firstName,
+          last_name: lastName,
+          displayName: userProfile?.displayName || fbUser.displayName || fbUser.email
+        };
+        renderLoggedInUI(currentUser);
+        updateAuthBadge(true);
+      } catch (err) {
+        console.warn('Auth state sync error:', err);
+      }
+    } else {
+      if (!authToken) {
+        renderLoggedOutUI();
+        updateAuthBadge(false);
+      }
+    }
+  });
+}
+
 if (signInForm) {
   signInForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2029,34 +2149,93 @@ if (signInForm) {
     }
     const btn = document.getElementById('submitLoginBtn');
     if (btn) btn.disabled = true;
+
     try {
-      const res = await fetch(`${API_BASE}/auth/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        showAuthError(data.detail || data.error || (res.status === 500 ? 'Server authentication error. Please retry in a moment.' : 'Invalid email or password.'));
-        if (btn) btn.disabled = false;
-        return;
-      }
-      authToken = data.access;
-      refreshToken = data.refresh || null;
-      localStorage.setItem('specforge_access_token', authToken);
-      localStorage.setItem('specforge_token', authToken);
-      if (refreshToken) localStorage.setItem('specforge_refresh_token', refreshToken);
-      closeAuthModal();
-      if (data.user) {
-        currentUser = data.user;
+      if (window.fbAuth) {
+        // 1. Firebase Authentication: Sign in
+        const userCredential = await window.fbAuth.signInWithEmailAndPassword(email, password);
+        const fbUser = userCredential.user;
+
+        // 2. Firestore: Read profile & update lastLoginAt
+        let userProfile = null;
+        if (window.fbDb) {
+          try {
+            const userDoc = await window.fbDb.collection('users').doc(fbUser.uid).get();
+            if (userDoc && userDoc.exists) {
+              userProfile = userDoc.data();
+              await window.fbDb.collection('users').doc(fbUser.uid).set({
+                lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+              }, { merge: true }).catch(() => {});
+            } else {
+              const names = (fbUser.displayName || '').split(' ');
+              userProfile = {
+                uid: fbUser.uid,
+                email: fbUser.email,
+                firstName: names[0] || '',
+                lastName: names.slice(1).join(' ') || '',
+                displayName: fbUser.displayName || fbUser.email,
+                lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              await window.fbDb.collection('users').doc(fbUser.uid).set(userProfile, { merge: true }).catch(() => {});
+            }
+          } catch (fsErr) {
+            console.warn('Firestore profile lookup error:', fsErr);
+          }
+        }
+
+        // 3. Synchronize with Django backend
+        const idToken = await fbUser.getIdToken();
+        const firstName = userProfile?.firstName || (fbUser.displayName ? fbUser.displayName.split(' ')[0] : '');
+        const lastName = userProfile?.lastName || (fbUser.displayName ? fbUser.displayName.split(' ').slice(1).join(' ') : '');
+        await syncUserWithBackend({
+          id_token: idToken,
+          email: fbUser.email,
+          uid: fbUser.uid,
+          first_name: firstName,
+          last_name: lastName
+        });
+
+        closeAuthModal();
+        currentUser = {
+          email: fbUser.email,
+          first_name: firstName,
+          last_name: lastName,
+          displayName: userProfile?.displayName || fbUser.displayName || fbUser.email
+        };
         renderLoggedInUI(currentUser);
         updateAuthBadge(true);
+        showToast('Signed in successfully with Firebase');
       } else {
-        await checkAuthStatus();
+        // Fallback: Direct Django API login
+        const res = await fetch(`${API_BASE}/auth/login/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showAuthError(data.detail || data.error || 'Invalid email or password.');
+          if (btn) btn.disabled = false;
+          return;
+        }
+        authToken = data.access;
+        refreshToken = data.refresh || null;
+        localStorage.setItem('specforge_access_token', authToken);
+        localStorage.setItem('specforge_token', authToken);
+        if (refreshToken) localStorage.setItem('specforge_refresh_token', refreshToken);
+        closeAuthModal();
+        if (data.user) {
+          currentUser = data.user;
+          renderLoggedInUI(currentUser);
+          updateAuthBadge(true);
+        } else {
+          await checkAuthStatus();
+        }
+        showToast('Signed in successfully');
       }
-      showToast('Signed in successfully');
     } catch (err) {
-      showAuthError('Network error connecting to server.');
+      console.error('Sign in error:', err);
+      showAuthError(formatFirebaseErrorMessage(err));
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -2081,45 +2260,95 @@ if (signUpForm) {
     }
     const btn = document.getElementById('submitRegisterBtn');
     if (btn) btn.disabled = true;
+
     try {
-      const res = await fetch(`${API_BASE}/auth/register/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, first_name, last_name }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        let errorText = 'Registration failed.';
-        if (data.email) errorText = Array.isArray(data.email) ? data.email.join(' ') : data.email;
-        else if (data.password) errorText = Array.isArray(data.password) ? data.password.join(' ') : data.password;
-        else if (data.detail) errorText = data.detail;
-        else if (res.status === 500) errorText = 'Server error during registration. Please retry.';
-        showAuthError(errorText);
-        if (btn) btn.disabled = false;
-        return;
-      }
-      // Register directly issues JWT pair + user info
-      if (data.access) {
-        authToken = data.access;
-        refreshToken = data.refresh || null;
-        localStorage.setItem('specforge_access_token', authToken);
-        localStorage.setItem('specforge_token', authToken);
-        if (refreshToken) localStorage.setItem('specforge_refresh_token', refreshToken);
-        closeAuthModal();
-        if (data.user) {
-          currentUser = data.user;
-          renderLoggedInUI(currentUser);
-          updateAuthBadge(true);
-        } else {
-          await checkAuthStatus();
+      if (window.fbAuth) {
+        // 1. Firebase Authentication: Create user
+        const userCredential = await window.fbAuth.createUserWithEmailAndPassword(email, password);
+        const fbUser = userCredential.user;
+
+        // 2. Set profile display name
+        const displayName = [first_name, last_name].filter(Boolean).join(' ') || email;
+        await fbUser.updateProfile({ displayName: displayName }).catch(() => {});
+
+        // 3. Save User Record to Firestore
+        if (window.fbDb) {
+          try {
+            await window.fbDb.collection('users').doc(fbUser.uid).set({
+              uid: fbUser.uid,
+              email: email,
+              firstName: first_name,
+              lastName: last_name,
+              displayName: displayName,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+              role: 'developer'
+            });
+          } catch (fsErr) {
+            console.warn('Firestore user creation warning:', fsErr);
+          }
         }
-        showToast('Account created & signed in!');
+
+        // 4. Synchronize with Django Backend
+        const idToken = await fbUser.getIdToken();
+        await syncUserWithBackend({
+          id_token: idToken,
+          email: fbUser.email,
+          uid: fbUser.uid,
+          first_name: first_name,
+          last_name: last_name
+        });
+
+        closeAuthModal();
+        currentUser = {
+          email: fbUser.email,
+          first_name: first_name,
+          last_name: last_name,
+          displayName: displayName
+        };
+        renderLoggedInUI(currentUser);
+        updateAuthBadge(true);
+        showToast('Account created and saved to Firestore!');
       } else {
-        switchAuthTab('signin');
-        showToast('Account created! Please sign in.');
+        // Fallback: Direct Django API registration
+        const res = await fetch(`${API_BASE}/auth/register/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, first_name, last_name }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          let errorText = 'Registration failed.';
+          if (data.email) errorText = Array.isArray(data.email) ? data.email.join(' ') : data.email;
+          else if (data.password) errorText = Array.isArray(data.password) ? data.password.join(' ') : data.password;
+          else if (data.detail) errorText = data.detail;
+          showAuthError(errorText);
+          if (btn) btn.disabled = false;
+          return;
+        }
+        if (data.access) {
+          authToken = data.access;
+          refreshToken = data.refresh || null;
+          localStorage.setItem('specforge_access_token', authToken);
+          localStorage.setItem('specforge_token', authToken);
+          if (refreshToken) localStorage.setItem('specforge_refresh_token', refreshToken);
+          closeAuthModal();
+          if (data.user) {
+            currentUser = data.user;
+            renderLoggedInUI(currentUser);
+            updateAuthBadge(true);
+          } else {
+            await checkAuthStatus();
+          }
+          showToast('Account created and signed in!');
+        } else {
+          switchAuthTab('signin');
+          showToast('Account created! Please sign in.');
+        }
       }
     } catch (err) {
-      showAuthError('Network error connecting to server.');
+      console.error('Sign up error:', err);
+      showAuthError(formatFirebaseErrorMessage(err));
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -2127,7 +2356,14 @@ if (signUpForm) {
 }
 
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', () => {
+  logoutBtn.addEventListener('click', async () => {
+    if (window.fbAuth) {
+      try {
+        await window.fbAuth.signOut();
+      } catch (fbErr) {
+        console.warn('Firebase signout warning:', fbErr);
+      }
+    }
     authToken = null;
     refreshToken = null;
     currentUser = null;
@@ -2155,6 +2391,7 @@ if (toggleFileTreeDockBtn) {
 
 // ── Init ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  initFirebaseAuthListener();
   await checkAuthStatus();
   renderTechTags();
   updateSidebarNavVisuals();

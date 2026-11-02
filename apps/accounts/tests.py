@@ -65,4 +65,18 @@ class AuthTests(APITestCase):
         # 4. Test invalid token
         res_invalid = self.client.post(self.refresh_url, {"refresh": "malformed.refresh.token"})
         self.assertEqual(res_invalid.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_firebase_sync_endpoint(self):
+        url = reverse("accounts:firebase_sync")
+        payload = {
+            "email": "firebaseuser@example.com",
+            "uid": "fb_uid_123456789",
+            "first_name": "Firebase",
+            "last_name": "Dev",
+        }
+        res = self.client.post(url, payload, format="json")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn("access", res.data)
+        self.assertIn("refresh", res.data)
+        self.assertEqual(res.data["user"]["email"], "firebaseuser@example.com")
+        self.assertTrue(User.objects.filter(email="firebaseuser@example.com").exists())
 

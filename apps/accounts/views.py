@@ -1,5 +1,7 @@
 import logging
+from django.contrib.auth import get_user_model
 from rest_framework import generics, status
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -75,3 +77,56 @@ class MeView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+class FirebaseSyncView(APIView):
+    """
+    POST /api/auth/firebase-sync/
+    Synchronizes an authenticated Firebase user with the Django backend.
+    Saves/updates the user record and returns JWT access/refresh tokens.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = (request.data.get("email") or "").lower().strip()
+        uid = (request.data.get("uid") or "").strip()
+        first_name = (request.data.get("first_name") or "").strip()
+        last_name = (request.data.get("last_name") or "").strip()
+
+        if not email:
+            return Response(
+                {"detail": "Email address is required to sync user."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        User = get_user_model()
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "first_name": first_name,
+                "last_name": last_name,
+            },
+        )
+
+        update_fields = []
+        if first_name and user.first_name != first_name:
+            user.first_name = first_name
+            update_fields.append("first_name")
+        if last_name and user.last_name != last_name:
+            user.last_name = last_name
+            update_fields.append("last_name")
+        if update_fields:
+            user.save(update_fields=update_fields)
+
+        refresh = RefreshToken.for_user(user)
+        user_data = UserSerializer(user).data
+
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": user_data,
+                "firebase_uid": uid,
+            },
+            status=status.HTTP_200_OK,
+        )
+
