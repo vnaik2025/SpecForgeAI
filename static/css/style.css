@@ -1040,3 +1040,27 @@ body {
   .banner-right { flex-direction: column; }
   .banner-right .btn { width: 100%; justify-content: center; }
 }
+
+/* =====================================================================
+   Universal Button Design & Anti-Wrap Standards
+   ===================================================================== */
+button,
+[role="button"],
+.btn,
+.file-item-btn {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  user-select: none;
+}
+
+button span,
+[role="button"] span {
+  white-space: nowrap !important;
+}
+
+/* Button Tactile Click Feedback */
+button:active:not(:disabled),
+[role="button"]:active {
+  transform: translateY(1px);
+}
+

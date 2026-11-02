@@ -1203,7 +1203,7 @@ function updateSidebarNavVisuals() {
 
     if (isAct) {
       if (key === 'fe_ui' || key === 'ui') {
-        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded bg-indigo-50 text-indigo-900 border border-indigo-300 font-semibold flex items-center justify-between truncate";
+        btn.className = "file-item-btn whitespace-nowrap shrink-0 w-full text-left px-2.5 py-1.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-300 font-semibold flex items-center justify-between truncate shadow-2xs";
         btn.innerHTML = `
           <span class="flex items-center gap-1.5 truncate">
             <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path></svg>
@@ -1212,7 +1212,7 @@ function updateSidebarNavVisuals() {
           <span class="text-[9px] bg-indigo-200/80 text-indigo-800 px-1 rounded uppercase font-mono font-bold shrink-0">Active</span>
         `;
       } else if (folder === 'backend' || key.startsWith('be_')) {
-        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded bg-amber-50 text-amber-950 border border-amber-300/80 font-semibold flex items-center justify-between truncate";
+        btn.className = "file-item-btn whitespace-nowrap shrink-0 w-full text-left px-2.5 py-1.5 rounded-md bg-amber-50 text-amber-950 border border-amber-300/80 font-semibold flex items-center justify-between truncate shadow-2xs";
         btn.innerHTML = `
           <span class="flex items-center gap-1.5 truncate">
             <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
@@ -1221,7 +1221,7 @@ function updateSidebarNavVisuals() {
           <span class="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0"></span>
         `;
       } else {
-        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded bg-blue-50 text-blue-900 border border-blue-200/60 font-semibold flex items-center justify-between truncate";
+        btn.className = "file-item-btn whitespace-nowrap shrink-0 w-full text-left px-2.5 py-1.5 rounded-md bg-blue-50 text-blue-900 border border-blue-200/60 font-semibold flex items-center justify-between truncate shadow-2xs";
         btn.innerHTML = `
           <span class="flex items-center gap-1.5 truncate">
             <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
@@ -1232,7 +1232,7 @@ function updateSidebarNavVisuals() {
       }
     } else {
       if (key === 'fe_ui' || key === 'ui') {
-        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded text-indigo-700 hover:bg-indigo-50/70 border border-transparent hover:border-indigo-100 flex items-center justify-between truncate";
+        btn.className = "file-item-btn whitespace-nowrap shrink-0 w-full text-left px-2.5 py-1.5 rounded-md text-indigo-700 hover:bg-indigo-50/70 border border-transparent hover:border-indigo-100 flex items-center justify-between truncate transition";
         btn.innerHTML = `
           <span class="flex items-center gap-1.5 truncate">
             <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path></svg>
@@ -1241,7 +1241,7 @@ function updateSidebarNavVisuals() {
           <span class="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded uppercase font-mono font-semibold shrink-0">Live UI</span>
         `;
       } else {
-        btn.className = "file-item-btn w-full text-left px-2 py-1.5 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate";
+        btn.className = "file-item-btn whitespace-nowrap shrink-0 w-full text-left px-2.5 py-1.5 rounded-md text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 truncate transition";
         btn.innerHTML = `
           <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
           <span class="truncate">${filename}</span>
@@ -1389,8 +1389,8 @@ function setModalViewport(mode) {
   Object.keys(btns).forEach(k => {
     if (btns[k]) {
       btns[k].className = (k === mode)
-        ? "px-2.5 py-1 rounded text-[11px] font-mono font-bold bg-white text-slate-900 shadow-2xs transition cursor-pointer"
-        : "px-2.5 py-1 rounded text-[11px] font-mono text-slate-600 hover:text-slate-900 transition cursor-pointer";
+        ? "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs border border-slate-200 transition cursor-pointer whitespace-nowrap shrink-0"
+        : "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 transition cursor-pointer whitespace-nowrap shrink-0";
     }
   });
 
@@ -1473,14 +1473,14 @@ document.addEventListener('keydown', (e) => {
 if (modePreviewBtn && modeRawBtn) {
   modePreviewBtn.addEventListener('click', () => {
     isRawMode = false;
-    modePreviewBtn.className = "text-[11px] font-mono px-2 py-0.5 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 transition";
-    modeRawBtn.className = "text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition";
+    modePreviewBtn.className = "inline-flex items-center gap-1 px-3 py-1 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 text-xs transition cursor-pointer whitespace-nowrap shrink-0";
+    modeRawBtn.className = "inline-flex items-center gap-1 px-3 py-1 rounded text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer whitespace-nowrap shrink-0";
     renderActiveFileContent();
   });
   modeRawBtn.addEventListener('click', () => {
     isRawMode = true;
-    modeRawBtn.className = "text-[11px] font-mono px-2 py-0.5 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 transition";
-    modePreviewBtn.className = "text-[11px] font-mono px-2 py-0.5 rounded hover:bg-slate-100 text-slate-600 transition";
+    modeRawBtn.className = "inline-flex items-center gap-1 px-3 py-1 rounded bg-white border border-slate-300 shadow-2xs font-semibold text-slate-900 text-xs transition cursor-pointer whitespace-nowrap shrink-0";
+    modePreviewBtn.className = "inline-flex items-center gap-1 px-3 py-1 rounded text-slate-600 hover:text-slate-900 font-medium text-xs transition cursor-pointer whitespace-nowrap shrink-0";
     renderActiveFileContent();
   });
 }
