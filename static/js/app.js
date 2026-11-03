@@ -543,14 +543,8 @@ async function ensureAuthToken(forceRefresh = false) {
 }
 
 function updateAuthBadge(ok) {
-  if (!authStatusBadge) return;
-  if (ok) {
-    authStatusBadge.className = "flex items-center space-x-1.5 text-[11px] font-medium text-slate-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full";
-    authStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-emerald-700 font-mono tracking-tight text-[10px] uppercase">Ready</span>`;
-  } else {
-    authStatusBadge.className = "flex items-center space-x-1.5 text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full";
-    authStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="text-slate-600 font-mono tracking-tight text-[10px] uppercase">Sign In</span>`;
-  }
+  // Status indicator removed from navbar
+  return;
 }
 
 // ── Docking Logic ─────────────────────────────────────────────────────────
