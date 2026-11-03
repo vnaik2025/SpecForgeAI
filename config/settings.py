@@ -157,6 +157,28 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "30/minute",
+        "user": "120/minute",
+        "scope_analysis": "20/minute",
+        "ai_generation": "15/hour",
+    },
+}
+
+# --- Cache Configuration (Token Protection & Performance) ---
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "specforge-ai-cache",
+        "TIMEOUT": 86400,  # 24 hours
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000,
+        },
+    }
 }
 
 

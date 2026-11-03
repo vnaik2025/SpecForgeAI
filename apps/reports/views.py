@@ -7,6 +7,7 @@ from rest_framework import generics, status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from . import services
@@ -113,10 +114,16 @@ class AnalyzeScopeDocumentView(APIView):
     matching blueprint, architectural notes, and ideated core modules.
     """
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "scope_analysis"
 
     def post(self, request):
         scope_text = request.data.get("scope_text", "")
         filename = request.data.get("filename", "")
+
+        # Payload guard: cap raw input at 60,000 characters to prevent memory/DoW attacks
+        if isinstance(scope_text, str) and len(scope_text) > 60000:
+            scope_text = scope_text[:60000]
 
         # Also support direct multipart file upload
         uploaded_file = request.FILES.get("file")
@@ -208,6 +215,8 @@ class GenerateScaffoldView(APIView):
     """POST /api/scaffolds/<uuid>/generate/ -> Triggers AI analysis & spec generation"""
 
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_generation"
 
     def post(self, request, pk):
         try:
@@ -273,6 +282,8 @@ class GenerateUiPrototypeView(APIView):
     """POST /api/scaffolds/<uuid>/generate-ui/ -> Synthesizes single-file HTML/Tailwind UI prototype"""
 
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_generation"
 
     def post(self, request, pk):
         try:

@@ -121,3 +121,24 @@ class ReportsAndScaffoldTests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Binary file content detected", res.data.get("detail", ""))
 
+    def test_analyze_scope_caching_defense(self):
+        """Verify that identical scope analysis requests are cached, saving LLM tokens."""
+        from unittest.mock import patch
+        from django.core.cache import cache
+        cache.clear()
+
+        sample_scope = "Build a school library book checkout system with Django, PostgreSQL and React."
+        url = reverse("reports:scaffold_analyze_scope")
+
+        # First request populates cache
+        res1 = self.client.post(url, {"scope_text": sample_scope}, format="json")
+        self.assertEqual(res1.status_code, status.HTTP_200_OK)
+
+        # Second request should be served from cache without calling the AI client
+        with patch("apps.reports.services.OpenAI") as mock_openai:
+            res2 = self.client.post(url, {"scope_text": sample_scope}, format="json")
+            self.assertEqual(res2.status_code, status.HTTP_200_OK)
+            self.assertEqual(res1.data.get("title"), res2.data.get("title"))
+            mock_openai.assert_not_called()
+
+
