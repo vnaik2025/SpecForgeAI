@@ -266,6 +266,15 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 
+# --- Firebase Client Configuration ---
+FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY", "AIzaSyBSs7GqVOG8jCJquMbbPhm1cVhYtJ8upQU")
+FIREBASE_AUTH_DOMAIN = os.getenv("FIREBASE_AUTH_DOMAIN", "specforgeai-2c77c.firebaseapp.com")
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", "specforgeai-2c77c")
+FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET", "specforgeai-2c77c.firebasestorage.app")
+FIREBASE_MESSAGING_SENDER_ID = os.getenv("FIREBASE_MESSAGING_SENDER_ID", "659534608343")
+FIREBASE_APP_ID = os.getenv("FIREBASE_APP_ID", "1:659534608343:web:d8da1bc722815823e23d92")
+
+
 # --- Email ---
 MAILERS = {
     "default": {

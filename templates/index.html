@@ -922,12 +922,12 @@
   <script>
     // Firebase Configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyDgDBc_Gzal6aN5tJfkWjHXAakHLxxKBHI",
-      authDomain: "specforgeai-9244d.firebaseapp.com",
-      projectId: "specforgeai-9244d",
-      storageBucket: "specforgeai-9244d.firebasestorage.app",
-      messagingSenderId: "115706137648",
-      appId: "1:115706137648:web:63afd49457d46b9daa71f5"
+      apiKey: "{{ FIREBASE_API_KEY|default:'AIzaSyBSs7GqVOG8jCJquMbbPhm1cVhYtJ8upQU' }}",
+      authDomain: "{{ FIREBASE_AUTH_DOMAIN|default:'specforgeai-2c77c.firebaseapp.com' }}",
+      projectId: "{{ FIREBASE_PROJECT_ID|default:'specforgeai-2c77c' }}",
+      storageBucket: "{{ FIREBASE_STORAGE_BUCKET|default:'specforgeai-2c77c.firebasestorage.app' }}",
+      messagingSenderId: "{{ FIREBASE_MESSAGING_SENDER_ID|default:'659534608343' }}",
+      appId: "{{ FIREBASE_APP_ID|default:'1:659534608343:web:d8da1bc722815823e23d92' }}"
     };
     if (window.firebase) {
       if (!firebase.apps.length) {

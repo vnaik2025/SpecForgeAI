@@ -1,5 +1,6 @@
 import logging
 import re
+from django.conf import settings
 from django.http import FileResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
@@ -20,6 +21,16 @@ logger = logging.getLogger(__name__)
 class DashboardView(TemplateView):
     """Interactive Web Dashboard for Project Scaffolding."""
     template_name = "index.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["FIREBASE_API_KEY"] = getattr(settings, "FIREBASE_API_KEY", "")
+        ctx["FIREBASE_AUTH_DOMAIN"] = getattr(settings, "FIREBASE_AUTH_DOMAIN", "")
+        ctx["FIREBASE_PROJECT_ID"] = getattr(settings, "FIREBASE_PROJECT_ID", "")
+        ctx["FIREBASE_STORAGE_BUCKET"] = getattr(settings, "FIREBASE_STORAGE_BUCKET", "")
+        ctx["FIREBASE_MESSAGING_SENDER_ID"] = getattr(settings, "FIREBASE_MESSAGING_SENDER_ID", "")
+        ctx["FIREBASE_APP_ID"] = getattr(settings, "FIREBASE_APP_ID", "")
+        return ctx
 from .serializers import (
     AiAnalysisSerializer,
     ProjectScaffoldCreateSerializer,
