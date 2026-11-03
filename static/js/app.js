@@ -357,6 +357,51 @@ const EMPTY_STUDIO_FILES = {
 };
 
 
+// ── Developer & Architecture Guide Modal Operations ───────────────────────
+function openGuideModal(tab = 'workflow') {
+  const modal = document.getElementById('guideModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  switchGuideTab(tab);
+  document.body.classList.add('overflow-hidden');
+}
+
+function closeGuideModal() {
+  const modal = document.getElementById('guideModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
+
+function switchGuideTab(tab) {
+  const tabs = ['workflow', 'specs', 'studio', 'tips'];
+  tabs.forEach(t => {
+    const key = t.charAt(0).toUpperCase() + t.slice(1);
+    const btn = document.getElementById(`guideTabBtn${key}`);
+    const content = document.getElementById(`guideContent${key}`);
+    if (t === tab) {
+      if (btn) {
+        btn.className = "guide-tab-btn px-3.5 py-2.5 rounded-t-lg bg-white text-blue-600 border-t border-x border-slate-200 shadow-2xs font-semibold flex items-center gap-2 whitespace-nowrap cursor-pointer transition";
+        const svg = btn.querySelector('svg');
+        if (svg) svg.className = "w-4 h-4 text-blue-600";
+      }
+      if (content) content.classList.remove('hidden');
+    } else {
+      if (btn) {
+        btn.className = "guide-tab-btn px-3.5 py-2.5 rounded-t-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 flex items-center gap-2 whitespace-nowrap cursor-pointer transition";
+        const svg = btn.querySelector('svg');
+        if (svg) svg.className = "w-4 h-4 text-slate-400";
+      }
+      if (content) content.classList.add('hidden');
+    }
+  });
+}
+
+window.openGuideModal = openGuideModal;
+window.closeGuideModal = closeGuideModal;
+window.switchGuideTab = switchGuideTab;
+
+
 function openAuthModal(tab = 'signin', errorMsg = null) {
   if (!authModal) return;
   authModal.classList.remove('hidden');
@@ -1564,11 +1609,18 @@ if (toggleInlineFrameBtn && inlineFrameContainer) {
   });
 }
 
-// ESC Key Listener for Modal
+// ESC Key Listener for Modals
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    const gModal = document.getElementById('guideModal');
+    if (gModal && !gModal.classList.contains('hidden')) {
+      closeGuideModal();
+    }
     if (uiCanvasModal && !uiCanvasModal.classList.contains('hidden')) {
       closeBigWindowModal();
+    }
+    if (authModal && !authModal.classList.contains('hidden')) {
+      closeAuthModal();
     }
   }
 });

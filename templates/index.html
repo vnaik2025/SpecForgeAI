@@ -103,10 +103,10 @@
 
     <!-- Navigation & User Actions -->
     <nav class="flex items-center space-x-3 sm:space-x-4 text-xs font-medium text-slate-600">
-      <a class="hover:text-slate-900 transition-colors hidden md:inline-flex items-center gap-1.5" href="javascript:void(0)" onclick="alert('SpecForge AI v2.0 - Autonomous Architecture & Specification Engine. Generates production-ready AGENT.md, ARCHITECTURE.md, SETUP.md, SKILLS.md, and API_SETUP.md.')">
-        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        <span>Guide</span>
-      </a>
+      <button type="button" id="navGuideBtn" onclick="openGuideModal('workflow')" class="hover:text-slate-900 transition-colors inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 cursor-pointer px-2 py-1 rounded hover:bg-slate-100">
+        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        <span class="font-semibold text-slate-800">Guide</span>
+      </button>
       <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
 
       <!-- Auth State Widget (Unauthenticated State) -->
@@ -828,6 +828,292 @@
 
     </div>
   </div>
+
+  <!-- DEVELOPER & USER GUIDE MODAL -->
+  <div id="guideModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 md:p-8" onclick="if(event.target === this) closeGuideModal()">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/90 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3.5 min-w-0">
+          <div class="w-9 h-9 bg-slate-950 text-white rounded-lg flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-sm sm:text-base font-bold text-slate-900 leading-none">SpecForge AI User &amp; Architecture Guide</h2>
+              <span class="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-mono font-semibold">v2.0 Docs</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1 truncate">Complete developer reference for requirement synthesis, specifications, and interactive prototypes.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeGuideModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition cursor-pointer shrink-0" title="Close Guide (Esc)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex border-b border-slate-200 bg-slate-100/70 text-xs font-semibold px-4 overflow-x-auto shrink-0 gap-1 pt-1.5">
+        <button type="button" id="guideTabBtnWorkflow" onclick="switchGuideTab('workflow')" class="guide-tab-btn px-3.5 py-2.5 rounded-t-lg bg-white text-blue-600 border-t border-x border-slate-200 shadow-2xs font-semibold flex items-center gap-2 whitespace-nowrap cursor-pointer transition">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+          <span>1. Workflow &amp; Quickstart</span>
+        </button>
+        <button type="button" id="guideTabBtnSpecs" onclick="switchGuideTab('specs')" class="guide-tab-btn px-3.5 py-2.5 rounded-t-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 flex items-center gap-2 whitespace-nowrap cursor-pointer transition">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          <span>2. Generated Specs (.md)</span>
+        </button>
+        <button type="button" id="guideTabBtnStudio" onclick="switchGuideTab('studio')" class="guide-tab-btn px-3.5 py-2.5 rounded-t-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 flex items-center gap-2 whitespace-nowrap cursor-pointer transition">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/></svg>
+          <span>3. Studio &amp; UI Prototypes</span>
+        </button>
+        <button type="button" id="guideTabBtnTips" onclick="switchGuideTab('tips')" class="guide-tab-btn px-3.5 py-2.5 rounded-t-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 flex items-center gap-2 whitespace-nowrap cursor-pointer transition">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.5a3 3 0 11-6 0 3 3 0 016 0zM12 3a6 6 0 00-6 6c0 1.764.764 3.35 1.986 4.457A3.75 3.75 0 019 16.5h6a3.75 3.75 0 011.014-3.043A5.992 5.992 0 0018 9a6 6 0 00-6-6z"/></svg>
+          <span>4. Pro Tips &amp; Caching</span>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-5 sm:p-7 overflow-y-auto space-y-6 text-slate-700 text-xs leading-relaxed flex-1">
+        
+        <!-- TAB 1: WORKFLOW & QUICKSTART -->
+        <div id="guideContentWorkflow" class="space-y-6">
+          <div class="bg-blue-50/60 border border-blue-200/80 rounded-xl p-4 sm:p-5 flex items-start gap-3.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold text-sm">
+              AI
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">What is SpecForge AI?</h3>
+              <p class="text-xs text-slate-600 mt-1">
+                SpecForge AI is an autonomous technical architecture engine. It takes raw project requirements (PRDs, Word documents, PDFs, or user stories) and synthesizes production-ready developer specifications (AGENT.md, ARCHITECTURE.md, SETUP.md, SKILLS.md, API_SETUP.md), ready-to-run folder structures, and interactive UI prototypes in seconds.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-2">
+              <div class="flex items-center gap-2 text-slate-900 font-bold text-xs font-mono">
+                <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px]">1</span>
+                <span>Ingest Document or Raw Scope</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                Upload a Word document (<code class="px-1 py-0.5 rounded bg-slate-100 text-slate-800 font-mono">.docx</code>), <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-800 font-mono">.pdf</code>, or paste your requirements directly. SpecForge handles client-side and server-side text extraction automatically.
+              </p>
+            </div>
+
+            <div class="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-2">
+              <div class="flex items-center gap-2 text-slate-900 font-bold text-xs font-mono">
+                <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px]">2</span>
+                <span>Automatic Stack &amp; Module Ideation</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                Click <strong>Analyze Scope</strong>. The AI classifies Frontend, Backend, Database, and external services, recommends an architectural blueprint, and ideates 4–8 functional modules.
+              </p>
+            </div>
+
+            <div class="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-2">
+              <div class="flex items-center gap-2 text-slate-900 font-bold text-xs font-mono">
+                <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px]">3</span>
+                <span>Refine Stack &amp; Directives</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                Add custom technology chips (e.g. Tailwind, PostgreSQL, Redis) or supply strict constraints in the <em>VIP Directives</em> box (e.g. "Use DRF SimpleJWT", "Implement Stripe Webhooks").
+              </p>
+            </div>
+
+            <div class="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-2">
+              <div class="flex items-center gap-2 text-slate-900 font-bold text-xs font-mono">
+                <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px]">4</span>
+                <span>Generate Scaffold &amp; Prototype</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                Click <strong>Generate Specifications</strong>. The engine outputs 6 detailed specification files, compiles a live single-file HTML UI prototype, and packages a downloadable ZIP.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: GENERATED SPECS -->
+        <div id="guideContentSpecs" class="hidden space-y-4">
+          <p class="text-xs text-slate-600">
+            SpecForge AI structures its generated blueprints into cleanly separated <code class="px-1 py-0.5 rounded bg-slate-100 font-mono text-slate-800">frontend/</code> and <code class="px-1 py-0.5 rounded bg-slate-100 font-mono text-slate-800">backend/</code> specifications designed for coding agents (Cursor, Claude Code, GitHub Copilot, Antigravity) and human engineers:
+          </p>
+
+          <div class="space-y-3">
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-slate-900 text-xs flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px]">AGENT.md</span>
+                  <span>Autonomous Coding Agent Context</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">Cursor / Claude / Copilot</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                The primary brain for AI pair programmers. Defines system role, tone, mandatory code standards, file conventions, prohibited libraries, and error-handling protocols.
+              </p>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-slate-900 text-xs flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 text-[10px]">ARCHITECTURE.md</span>
+                  <span>System Architecture &amp; Schemas</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">System Design</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                High-level architecture documentation covering module boundaries, database schemas, primary/foreign keys, state machines, and data flow pipelines.
+              </p>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-slate-900 text-xs flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px]">SETUP.md</span>
+                  <span>Deterministic Setup Commands</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">DevOps &amp; Local Setup</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                Deterministic, copy-paste terminal commands to initialize the virtual environment, install exact package dependencies, run database migrations, and populate `.env` files.
+              </p>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-slate-900 text-xs flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 text-[10px]">SKILLS.md</span>
+                  <span>Specialized Workflows &amp; Tooling</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">Agent Workflows</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                Actionable step-by-step verification routines, unit test execution recipes, linting tasks, and specialized domain workflows for autonomous execution.
+              </p>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-slate-900 text-xs flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px]">API_SETUP.md</span>
+                  <span>REST API Contracts &amp; Headers</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">API Specs</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                Endpoint contracts, HTTP methods, authentication tokens, payload schemas, query parameters, and expected HTTP status codes.
+              </p>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-slate-900 text-xs flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 text-[10px]">UI_PROTOTYPE.html</span>
+                  <span>Interactive HTML/Tailwind Prototype</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">Frontend Canvas</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600">
+                Standalone single-file prototype containing responsive views, live mock records, a Kanban board, search filtering, and interactive dummy authentication.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: STUDIO & PROTOTYPES -->
+        <div id="guideContentStudio" class="hidden space-y-4">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+            <h3 class="text-xs font-bold text-slate-900 uppercase font-mono">Specification Studio Features</h3>
+            <p class="text-[11.5px] text-slate-600">
+              The Specification Studio is your centralized development console for reviewing and exporting blueprints:
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="p-3.5 rounded-lg border border-slate-200 bg-white space-y-1.5">
+              <span class="font-bold text-slate-900 text-xs block">File Tree Navigation</span>
+              <p class="text-[11px] text-slate-600">
+                Quickly toggle between <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">frontend/</code> and <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">backend/</code> files in the left sidebar. Badges show completion status.
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-lg border border-slate-200 bg-white space-y-1.5">
+              <span class="font-bold text-slate-900 text-xs block">Preview vs Raw Source</span>
+              <p class="text-[11px] text-slate-600">
+                Switch between rendered GitHub-style Markdown and syntax-highlighted raw markdown with a 1-click clipboard copy button.
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-lg border border-slate-200 bg-white space-y-1.5">
+              <span class="font-bold text-slate-900 text-xs block">Big Window UI Canvas</span>
+              <p class="text-[11px] text-slate-600">
+                Click <strong>Open Big Window</strong> to preview the interactive HTML prototype in Desktop (1440px), Laptop (1024px), Tablet (768px), or Mobile (375px) viewports.
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-lg border border-slate-200 bg-white space-y-1.5">
+              <span class="font-bold text-slate-900 text-xs block">Simulated Dummy Auth</span>
+              <p class="text-[11px] text-slate-600">
+                Prototypes support interactive dummy login and logout. Enter demo credentials, test protected views, and verify responsive navigation with 0 page reloads.
+              </p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-950 text-white rounded-xl space-y-2">
+            <span class="text-xs font-mono font-bold text-blue-400 uppercase">Exporting to Your IDE</span>
+            <p class="text-[11.5px] text-slate-300">
+              Click <strong>Download Complete Scaffold (.ZIP)</strong> in the top studio toolbar. Unpack the zip file into your local project root or open it directly in VS Code, Cursor, or WebStorm.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 4: PRO TIPS & CACHING -->
+        <div id="guideContentTips" class="hidden space-y-4">
+          <div class="border border-slate-200 rounded-xl p-4 bg-white space-y-2">
+            <h3 class="text-xs font-bold text-slate-900 uppercase font-mono">Writing High-Performance Scope Documents</h3>
+            <ul class="list-disc list-inside space-y-1.5 text-[11.5px] text-slate-600">
+              <li><strong>List Core Entities:</strong> Explicitly mention entities like <em>Orders, Inventory, Customers, Dispatch</em> for accurate database models.</li>
+              <li><strong>Specify User Roles:</strong> Mention access levels (e.g., <em>Admin, Store Manager, Customer</em>) so the API and UI prototypes generate authentic role-based interfaces.</li>
+              <li><strong>Use Technical Keywords:</strong> If you need specific libraries (e.g. <em>Celery, Redis, Stripe, Tailwind</em>), include them in the document or the custom tech stack tags.</li>
+            </ul>
+          </div>
+
+          <div class="border border-slate-200 rounded-xl p-4 bg-white space-y-2">
+            <h3 class="text-xs font-bold text-slate-900 uppercase font-mono">Cryptographic Token Caching (0 Tokens on Repeats)</h3>
+            <p class="text-[11.5px] text-slate-600">
+              SpecForge AI computes a SHA-256 fingerprint hash of your scope text. If you re-analyze a project, reload the page, or test sample prompts, responses return in <strong>~10 milliseconds</strong> consuming <strong>0 LLM tokens</strong>.
+            </p>
+          </div>
+
+          <div class="border border-slate-200 rounded-xl p-4 bg-white space-y-2">
+            <h3 class="text-xs font-bold text-slate-900 uppercase font-mono">Keyboard Shortcuts</h3>
+            <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+              <div class="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                <span class="text-slate-600">Close Any Modal</span>
+                <kbd class="px-1.5 py-0.5 rounded bg-white border border-slate-300 text-slate-800 shadow-2xs">Esc</kbd>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                <span class="text-slate-600">Add Tech Stack Tag</span>
+                <kbd class="px-1.5 py-0.5 rounded bg-white border border-slate-300 text-slate-800 shadow-2xs">Enter</kbd>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0 text-xs">
+        <span class="text-slate-500 font-mono text-[11px]">SpecForge AI v2.0 • Autonomous Architecture Studio</span>
+        <button type="button" onclick="closeGuideModal()" class="px-4 py-2 bg-slate-900 hover:bg-black text-white font-semibold rounded-lg text-xs transition shadow-2xs cursor-pointer">
+          Got It, Start Building
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 
   <!-- AUTHENTICATION MODAL (Secure Sign In / Sign Up Dialog) -->
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
