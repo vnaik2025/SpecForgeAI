@@ -1546,11 +1546,28 @@ def synthesize_dynamic_ui_prototype(scaffold: ProjectScaffold, analysis: dict = 
 
       <!-- Quick Action CTA & User Profile -->
       <div class="flex items-center space-x-3 shrink-0 self-end md:self-auto">
-        <button onclick="openModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md shadow-xs transition flex items-center gap-1.5 font-code cursor-pointer">
+        <button onclick="openModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md shadow-xs transition flex items-center gap-1.5 font-code cursor-pointer whitespace-nowrap">
           <span>+</span> <span>New {primary_entity}</span>
         </button>
-        <div class="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-xs font-code font-bold text-slate-700">
-          U
+        <div class="relative">
+          <button id="userMenuBtn" onclick="toggleUserMenu()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 border border-slate-300 flex items-center justify-center text-xs font-code font-bold text-slate-700 cursor-pointer transition">
+            AC
+          </button>
+          <div id="userDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1.5 z-50 text-xs font-sans">
+            <div class="px-3 py-2 border-b border-slate-100">
+              <p class="font-bold text-slate-800" id="userProfileName">Alex Chen</p>
+              <p class="text-[10px] text-slate-500 font-code truncate" id="userProfileEmail">alex.chen@demo-org.com</p>
+              <span class="inline-block mt-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[9px] font-semibold">Administrator</span>
+            </div>
+            <button onclick="openAuthModal()" class="w-full text-left px-3 py-1.5 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition flex items-center justify-between cursor-pointer">
+              <span>Switch User / Login</span>
+              <span class="text-[10px] text-slate-400 font-code">&#8594;</span>
+            </button>
+            <button onclick="handleLogout()" class="w-full text-left px-3 py-1.5 text-rose-600 hover:bg-rose-50 transition flex items-center justify-between cursor-pointer">
+              <span>Log Out</span>
+              <span class="text-[10px] font-code">&#x2715;</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1905,6 +1922,37 @@ def synthesize_dynamic_ui_prototype(scaffold: ProjectScaffold, analysis: dict = 
     </div>
   </div>
 
+  <!-- Interactive Dummy Auth Modal -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full border border-slate-200 p-6 space-y-4 font-sans">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-sm font-code">Sign In to {title}</h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600 text-xl leading-none cursor-pointer">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500">Test authentic authorization and multi-role access with pre-filled demo credentials.</p>
+      <form id="dummyAuthForm" onsubmit="handleAuthSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-700 mb-1 font-code">Work Email</label>
+          <input type="email" id="authEmail" value="alex.chen@demo-org.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-slate-900 outline-none" required />
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-700 mb-1 font-code">Password</label>
+          <input type="password" id="authPassword" value="password123" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-slate-900 outline-none" required />
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-500">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 text-xs" />
+            <span>Remember user</span>
+          </label>
+          <span class="text-blue-600 font-semibold cursor-pointer">Admin Role</span>
+        </div>
+        <button type="submit" id="authSubmitBtn" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5 font-code">
+          <span>Sign In (Demo Auth)</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notice -->
   <div id="toastNotice" class="fixed bottom-5 right-5 z-50 bg-slate-950 text-white text-xs font-code px-4 py-2.5 rounded-lg shadow-xl transition-all duration-300 translate-y-16 opacity-0 pointer-events-none">
     Notification
@@ -2103,15 +2151,243 @@ def synthesize_dynamic_ui_prototype(scaffold: ProjectScaffold, analysis: dict = 
       setTimeout(() => toast.classList.add('translate-y-16', 'opacity-0'), 2500);
     }}
 
+    function toggleUserMenu() {{
+      const menu = document.getElementById('userDropdownMenu');
+      if (menu) menu.classList.toggle('hidden');
+    }}
+
+    function openAuthModal() {{
+      if (document.getElementById('userDropdownMenu')) {{
+        document.getElementById('userDropdownMenu').classList.add('hidden');
+      }}
+      document.getElementById('authModal').classList.remove('hidden');
+    }}
+
+    function closeAuthModal() {{
+      document.getElementById('authModal').classList.add('hidden');
+    }}
+
+    function handleAuthSubmit(e) {{
+      e.preventDefault();
+      const email = (document.getElementById('authEmail')?.value || 'alex.chen@demo-org.com').trim();
+      const name = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase());
+      const btn = document.getElementById('authSubmitBtn');
+      if (btn) {{
+        btn.innerHTML = '<span>Verifying credentials...</span>';
+        btn.disabled = true;
+      }}
+
+      setTimeout(() => {{
+        if (btn) {{
+          btn.innerHTML = '<span>Sign In (Demo Auth)</span>';
+          btn.disabled = false;
+        }}
+        closeAuthModal();
+        const profileEl = document.getElementById('userProfileName');
+        if (profileEl) profileEl.textContent = name;
+        const emailEl = document.getElementById('userProfileEmail');
+        if (emailEl) emailEl.textContent = email;
+        const menuBtn = document.getElementById('userMenuBtn');
+        if (menuBtn) menuBtn.textContent = name.split(' ').map(n => n[0]).join('').slice(0, 2);
+        showToast(`Welcome back, ${{name}}! Authenticated successfully.`);
+      }}, 300);
+    }}
+
+    function handleLogout() {{
+      if (document.getElementById('userDropdownMenu')) {{
+        document.getElementById('userDropdownMenu').classList.add('hidden');
+      }}
+      openAuthModal();
+      showToast('Signed out of session. Authenticate with demo credentials.');
+    }}
+
     renderRecords();
   </script>
 </body>
 </html>"""
 
 
+def inject_prototype_auth_and_runtime_guards(html: str, project_title: str = "Prototype") -> str:
+    """
+    Injects an infallible universal runtime guard into the UI prototype:
+    1. Intercepts ALL form submissions (preventing iframe reloads/404s).
+    2. Detects authentication actions (login, signin, register, logout) and drives
+       a realistic dummy authentication workflow (success toast, user profile update,
+       switching between login view and dashboard).
+    3. Traps dead link clicks to prevent iframe navigation breakage.
+    """
+    if not html or "<html" not in html.lower():
+        return html
+
+    if "specforge-auth-runtime-guard" in html:
+        return html
+
+    guard_script = """
+  <!-- SpecForge Universal Prototype Runtime & Dummy Auth Engine -->
+  <script id="specforge-auth-runtime-guard">
+  (function() {
+    let isMockAuthenticated = true;
+    let mockUser = { name: "Alex Chen", email: "alex.chen@demo-org.com", role: "Administrator" };
+
+    function showRuntimeToast(message, type) {
+      let toast = document.getElementById("sfRuntimeNotice");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "sfRuntimeNotice";
+        toast.style.cssText = "position:fixed;bottom:24px;right:24px;background:#0f172a;color:#f8fafc;padding:12px 20px;border-radius:10px;font-size:12px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;z-index:999999;box-shadow:0 12px 30px rgba(0,0,0,0.35);border:1px solid #334155;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);display:flex;align-items:center;gap:10px;transform:translateY(20px);opacity:0;pointer-events:none;";
+        document.body.appendChild(toast);
+      }
+      const icon = type === "error" 
+        ? '<span style="color:#f43f5e;font-size:14px;">&#9888;</span>' 
+        : '<span style="color:#10b981;font-size:14px;">&#10003;</span>';
+      toast.innerHTML = icon + ' <span>' + message + '</span>';
+      toast.style.transform = "translateY(0)";
+      toast.style.opacity = "1";
+      clearTimeout(window.__sfToastTimer);
+      window.__sfToastTimer = setTimeout(() => {
+        toast.style.transform = "translateY(20px)";
+        toast.style.opacity = "0";
+      }, 3200);
+    }
+
+    function executeLoginFlow(userName, userEmail) {
+      isMockAuthenticated = true;
+      mockUser.name = userName || mockUser.name;
+      mockUser.email = userEmail || mockUser.email;
+
+      showRuntimeToast("Welcome, " + mockUser.name + "! Dummy authentication verified.", "success");
+
+      // 1. Hide any active auth / login modal or overlay
+      const authModals = document.querySelectorAll('#authModal, #loginModal, [id*="auth-modal"], [id*="login-modal"], [class*="auth-modal"], [class*="login-modal"]');
+      authModals.forEach(m => m.classList.add("hidden"));
+
+      // 2. Hide dedicated login/register pages or sections if present
+      const loginScreens = document.querySelectorAll('#page-login, #page-auth, #page-signin, #login-section, #auth-section, [id*="login-view"], [class*="login-screen"]');
+      loginScreens.forEach(s => {
+        s.classList.add("hidden");
+        s.style.display = "none";
+      });
+
+      // 3. Switch to and reveal main application workspace / overview
+      const mainAppViews = document.querySelectorAll('#page-overview, #page-dashboard, #page-workspace, #page-home, #main-view, #app-container');
+      if (mainAppViews.length > 0) {
+        mainAppViews[0].classList.remove("hidden");
+        mainAppViews[0].style.display = "";
+      }
+
+      // 4. If prototype has page switcher function, invoke it
+      if (typeof window.switchPage === "function") {
+        try { window.switchPage("overview"); } catch(e) {}
+      }
+
+      // 5. Update user profile chips, initials, and toggle logged-in/logged-out UI elements
+      document.querySelectorAll('#userProfileName, .user-name, [data-user-name]').forEach(el => {
+        el.textContent = mockUser.name;
+      });
+      document.querySelectorAll('#userProfileEmail, .user-email').forEach(el => {
+        el.textContent = mockUser.email;
+      });
+      document.querySelectorAll('#userMenuBtn, .user-avatar, .user-initials').forEach(el => {
+        const initials = mockUser.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+        if (el.tagName !== "IMG") el.textContent = initials || "AC";
+      });
+
+      document.querySelectorAll('.auth-logged-out, [data-auth="logged-out"]').forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll('.auth-logged-in, [data-auth="logged-in"]').forEach(el => el.classList.remove("hidden"));
+    }
+
+    function executeLogoutFlow() {
+      isMockAuthenticated = false;
+      showRuntimeToast("Signed out of demo session. Log back in to continue.", "info");
+
+      // Show login section or reveal auth modal
+      const loginScreens = document.querySelectorAll('#page-login, #page-auth, #page-signin, #login-section, #auth-section, [id*="login-view"], [class*="login-screen"]');
+      if (loginScreens.length > 0) {
+        document.querySelectorAll('.page-view, [id^="page-"]').forEach(v => {
+          v.classList.add("hidden");
+          v.style.display = "none";
+        });
+        loginScreens[0].classList.remove("hidden");
+        loginScreens[0].style.display = "";
+      } else {
+        const authModal = document.querySelector('#authModal, #loginModal, [id*="auth-modal"], [id*="login-modal"]');
+        if (authModal) {
+          authModal.classList.remove("hidden");
+        }
+      }
+
+      document.querySelectorAll('.auth-logged-out, [data-auth="logged-out"]').forEach(el => el.classList.remove("hidden"));
+      document.querySelectorAll('.auth-logged-in, [data-auth="logged-in"]').forEach(el => el.classList.add("hidden"));
+    }
+
+    // Intercept form submissions everywhere inside prototype
+    document.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const text = (form.innerText || "").toLowerCase();
+      const hasPass = !!form.querySelector('input[type="password"]');
+      const isAuthForm = hasPass || /login|sign\\s*in|authenticate|register|signup|auth/i.test((form.id || "") + " " + (form.className || "") + " " + text);
+
+      if (isAuthForm) {
+        const emailInput = form.querySelector('input[type="email"], input[type="text"]');
+        let userName = "Demo User";
+        let userEmail = "user@demo-system.com";
+        if (emailInput && emailInput.value) {
+          userEmail = emailInput.value.trim();
+          userName = userEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\\b\\w/g, c => c.toUpperCase());
+        }
+        executeLoginFlow(userName, userEmail);
+      } else {
+        showRuntimeToast("Form submitted successfully (Demo Mode)", "success");
+        const modal = form.closest('.modal, [id*="modal"], [id*="Modal"], [class*="modal"]');
+        if (modal && !modal.id.toLowerCase().includes("auth") && !modal.id.toLowerCase().includes("login")) {
+          modal.classList.add("hidden");
+        }
+      }
+    }, true);
+
+    // Intercept click on login / logout buttons, anchors, and mock controls
+    document.addEventListener("click", function(e) {
+      const trigger = e.target.closest('button, a, input[type="submit"], input[type="button"]');
+      if (!trigger) return;
+
+      const text = (trigger.textContent || trigger.value || "").trim().toLowerCase();
+      const isLoginTrigger = /^(log\\s*in|sign\\s*in|sign-in|authenticate|enter\\s*system|enter\\s*app)$/i.test(text) ||
+                             trigger.id.toLowerCase() === "loginbtn" || trigger.id.toLowerCase() === "signinbtn";
+
+      const isLogoutTrigger = /^(log\\s*out|sign\\s*out|sign-out|disconnect|exit)$/i.test(text) ||
+                              trigger.id.toLowerCase() === "logoutbtn" || trigger.id.toLowerCase() === "signoutbtn";
+
+      if (isLoginTrigger) {
+        if (trigger.form) return; // Handled by submit listener
+        e.preventDefault();
+        executeLoginFlow("Demo Admin", "admin@demo-system.com");
+      } else if (isLogoutTrigger) {
+        e.preventDefault();
+        executeLogoutFlow();
+      } else if (trigger.tagName === "A") {
+        const href = trigger.getAttribute("href");
+        if (href && (href.startsWith("/") || href === "#" || href === "")) {
+          e.preventDefault();
+        }
+      }
+    }, true);
+
+    // Expose helpers globally on window in iframe
+    window.simulateDummyLogin = executeLoginFlow;
+    window.simulateDummyLogout = executeLogoutFlow;
+  })();
+  </script>
+"""
+    if "</body>" in html:
+        return html.replace("</body>", f"{guard_script}\n</body>")
+    return html + "\n" + guard_script
+
+
 def generate_fallback_ui_prototype(scaffold: ProjectScaffold) -> str:
     """Wrapper delegating directly to dynamic scope-driven UI prototype synthesizer."""
-    return synthesize_dynamic_ui_prototype(scaffold)
+    raw = synthesize_dynamic_ui_prototype(scaffold)
+    return inject_prototype_auth_and_runtime_guards(raw, scaffold.title)
 
 
 def generate_ui_prototype(scaffold: ProjectScaffold) -> str:
@@ -2148,6 +2424,13 @@ CRITICAL ARCHITECTURAL DIRECTIVES:
    - Use curated color palettes (slate neutrals, vibrant domain accent colors like emerald, indigo, or blue), smooth transitions, and inline SVGs for all icons.
 7. PRE-POPULATE REALISTIC DOMAIN MOCK DATA:
    - Populate with at least 6-10 realistic domain items per module directly extracted from the scope document and personas.
+8. FUNCTIONAL DUMMY AUTHENTICATION & ZERO FORM RELOADS:
+   - When the project scope or specifications involve authentication (such as login, sign in, signup, auth modal, user accounts, or role permissions):
+     * The prototype MUST implement an interactive, fully functioning client-side dummy authentication flow in vanilla JavaScript!
+     * NEVER render a dead or unhandled login form that fails when submitted.
+     * ZERO PAGE RELOADS: Every <form> element MUST include onsubmit="event.preventDefault(); ...". Submitting a form or clicking a button must NEVER reload the page or navigate away from the iframe sandbox.
+     * When the user clicks "Sign In", "Log In", or submits credentials, validate dummy input, display an authentic success toast/feedback (e.g. "Signed in as demo user"), set authenticated state, update the header profile chip/name, and transition directly into the application dashboard (e.g. switchPage('overview')).
+     * Include a clickable "Log Out" / "Sign Out" action in the profile menu that transitions back to the login view or opens the auth modal so the user can test the login workflow again.
 """
 
     user_content = f"""PROJECT TITLE: {scaffold.title}
@@ -2217,6 +2500,8 @@ Based on this scope and all architectural specifications, ideate all required mo
 
     if not cleaned_html.startswith("<!DOCTYPE") and "<html" not in cleaned_html:
         cleaned_html = generate_fallback_ui_prototype(scaffold)
+    else:
+        cleaned_html = inject_prototype_auth_and_runtime_guards(cleaned_html, scaffold.title)
 
     scaffold.ui_prototype_html = cleaned_html
     scaffold.save(update_fields=["ui_prototype_html"])

@@ -141,4 +141,20 @@ class ReportsAndScaffoldTests(APITestCase):
             self.assertEqual(res1.data.get("title"), res2.data.get("title"))
             mock_openai.assert_not_called()
 
+    def test_ui_prototype_dummy_auth_runtime_guard(self):
+        """Verify that synthesized UI prototypes include working dummy auth controls and runtime guards."""
+        from .services import generate_fallback_ui_prototype
+        scaffold = ProjectScaffold.objects.create(
+            owner=self.user,
+            title="SaaS Analytics Dashboard",
+            scope_document="Multi-tenant user authentication and analytics platform with admin login, permissions, and KPI reports.",
+        )
+        html = generate_fallback_ui_prototype(scaffold)
+        self.assertIn("specforge-auth-runtime-guard", html)
+        self.assertIn("authModal", html)
+        self.assertIn("handleAuthSubmit", html)
+        self.assertIn("userMenuBtn", html)
+        self.assertIn("Dummy authentication verified", html)
+
+
 

@@ -1306,7 +1306,7 @@ function renderActiveFileContent() {
       if (uiPrototypeContainer) {
         uiPrototypeContainer.classList.remove('hidden');
         if (uiPrototypeIframe && !inlineFrameContainer.classList.contains('hidden') && uiPrototypeIframe.srcdoc !== rawText) {
-          uiPrototypeIframe.srcdoc = rawText;
+          uiPrototypeIframe.srcdoc = preparePrototypeHtmlForIframe(rawText);
         }
       }
     }
@@ -1348,6 +1348,116 @@ function renderActiveFileContent() {
   }
 }
 
+// ── Prototype Runtime Guard & Dummy Auth Helper ──────────────────────────
+function preparePrototypeHtmlForIframe(html) {
+  if (!html || typeof html !== 'string') return '';
+  if (html.includes('specforge-auth-runtime-guard')) return html;
+
+  const guardScript = `
+  <script id="specforge-auth-runtime-guard">
+  (function() {
+    let mockUser = { name: "Alex Chen", email: "alex.chen@demo-org.com" };
+
+    function showRuntimeToast(msg, type) {
+      let t = document.getElementById("sfRuntimeNotice");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "sfRuntimeNotice";
+        t.style.cssText = "position:fixed;bottom:24px;right:24px;background:#0f172a;color:#f8fafc;padding:12px 20px;border-radius:10px;font-size:12px;font-weight:600;font-family:sans-serif;z-index:999999;box-shadow:0 12px 30px rgba(0,0,0,0.35);border:1px solid #334155;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);display:flex;align-items:center;gap:10px;transform:translateY(20px);opacity:0;";
+        document.body.appendChild(t);
+      }
+      t.innerHTML = '<span style="color:#10b981;">&#10003;</span> <span>' + msg + '</span>';
+      t.style.transform = "translateY(0)";
+      t.style.opacity = "1";
+      clearTimeout(window.__sfTimer);
+      window.__sfTimer = setTimeout(() => {
+        t.style.transform = "translateY(20px)";
+        t.style.opacity = "0";
+      }, 3000);
+    }
+
+    function doLogin(name, email) {
+      mockUser.name = name || mockUser.name;
+      mockUser.email = email || mockUser.email;
+      showRuntimeToast("Welcome back, " + mockUser.name + "! Dummy authentication verified.");
+
+      document.querySelectorAll('#authModal, #loginModal, [id*="auth-modal"], [id*="login-modal"], [class*="auth-modal"], [class*="login-modal"]').forEach(m => m.classList.add("hidden"));
+      document.querySelectorAll('#page-login, #page-auth, #login-view, .login-page').forEach(s => {
+        s.classList.add("hidden");
+        s.style.display = "none";
+      });
+      const mains = document.querySelectorAll('#page-overview, #page-dashboard, #page-workspace, #main-view');
+      if (mains.length > 0) {
+        mains[0].classList.remove("hidden");
+        mains[0].style.display = "";
+      }
+      if (typeof window.switchPage === 'function') {
+        try { window.switchPage('overview'); } catch(e) {}
+      }
+      document.querySelectorAll('#userProfileName, .user-name').forEach(el => el.textContent = mockUser.name);
+      document.querySelectorAll('.auth-logged-out').forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll('.auth-logged-in').forEach(el => el.classList.remove("hidden"));
+    }
+
+    function doLogout() {
+      showRuntimeToast("Signed out of session. Click Sign In to test authentication.");
+      const loginScreens = document.querySelectorAll('#page-login, #page-auth, #login-view, .login-page');
+      if (loginScreens.length > 0) {
+        document.querySelectorAll('.page-view, [id^="page-"]').forEach(v => {
+          v.classList.add("hidden");
+          v.style.display = "none";
+        });
+        loginScreens[0].classList.remove("hidden");
+        loginScreens[0].style.display = "";
+      } else {
+        const modal = document.querySelector('#authModal, #loginModal');
+        if (modal) modal.classList.remove("hidden");
+      }
+      document.querySelectorAll('.auth-logged-out').forEach(el => el.classList.remove("hidden"));
+      document.querySelectorAll('.auth-logged-in').forEach(el => el.classList.add("hidden"));
+    }
+
+    document.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const text = (form.innerText || "").toLowerCase();
+      const isAuth = !!form.querySelector('input[type="password"]') || /login|sign\\s*in|authenticate|auth/i.test(form.id + ' ' + text);
+      if (isAuth) {
+        const inp = form.querySelector('input[type="email"], input[type="text"]');
+        const name = (inp && inp.value) ? inp.value.split('@')[0].replace(/[._-]/g, ' ') : "Demo Admin";
+        doLogin(name);
+      } else {
+        showRuntimeToast("Form submitted successfully (Demo mode)");
+        const m = form.closest('.modal, [id*="modal"]');
+        if (m) m.classList.add("hidden");
+      }
+    }, true);
+
+    document.addEventListener("click", function(e) {
+      const btn = e.target.closest('button, a, input[type="submit"]');
+      if (!btn) return;
+      const t = (btn.textContent || btn.value || "").trim().toLowerCase();
+      if (/^(log\\s*in|sign\\s*in|sign-in|authenticate)$/i.test(t)) {
+        if (btn.form) return;
+        e.preventDefault();
+        doLogin("Demo Admin");
+      } else if (/^(log\\s*out|sign\\s*out|sign-out|exit)$/i.test(t)) {
+        e.preventDefault();
+        doLogout();
+      } else if (btn.tagName === 'A') {
+        const h = btn.getAttribute('href');
+        if (h && (h.startsWith('/') || h === '#' || h === '')) e.preventDefault();
+      }
+    }, true);
+  })();
+  <\\/script>`;
+
+  if (html.includes('</body>')) {
+    return html.replace('</body>', guardScript + '\n</body>');
+  }
+  return html + '\n' + guardScript;
+}
+
 // ── Big Window UI Canvas Modal Operations ─────────────────────────────────
 function openBigWindowModal() {
   if (!uiCanvasModal) return;
@@ -1355,7 +1465,7 @@ function openBigWindowModal() {
   const htmlContent = file?.content || '';
 
   if (modalUiPrototypeIframe) {
-    modalUiPrototypeIframe.srcdoc = htmlContent;
+    modalUiPrototypeIframe.srcdoc = preparePrototypeHtmlForIframe(htmlContent);
   }
   if (!currentScaffold || !currentScaffold.ui_prototype_html) {
     showToast('No interactive UI prototype generated yet. Generate specifications first.');
@@ -1452,7 +1562,7 @@ if (toggleInlineFrameBtn && inlineFrameContainer) {
     if (isHidden) {
       inlineFrameContainer.classList.remove('hidden');
       toggleInlineFrameBtn.textContent = 'Hide Embedded View ↑';
-      if (uiPrototypeIframe) uiPrototypeIframe.srcdoc = getFileMap().ui?.content || '';
+      if (uiPrototypeIframe) uiPrototypeIframe.srcdoc = preparePrototypeHtmlForIframe(getFileMap().ui?.content || '');
     } else {
       inlineFrameContainer.classList.add('hidden');
       toggleInlineFrameBtn.textContent = 'Show Embedded View ↓';
@@ -1918,7 +2028,7 @@ if (scaffoldForm) {
 
       // If Big Window canvas or UI iframe is present, update srcdoc immediately
       if (modalUiPrototypeIframe && fullScaffold.ui_prototype_html) {
-        modalUiPrototypeIframe.srcdoc = fullScaffold.ui_prototype_html;
+        modalUiPrototypeIframe.srcdoc = preparePrototypeHtmlForIframe(fullScaffold.ui_prototype_html);
       }
       if (canvasProjectTitle) {
         canvasProjectTitle.textContent = `${fullScaffold.title} — UI_PROTOTYPE.html`;
