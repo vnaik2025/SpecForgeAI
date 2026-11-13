@@ -208,6 +208,9 @@ else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
+# Referrer Policy for Puter.js and cross-origin frontier AI communication
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 
 # --- Structured Logging ---
 LOGGING = {

@@ -2487,6 +2487,15 @@ function hydrateStudioWorkspace(fullScaffold, engineLabel = 'Server API') {
   }
 }
 
+// Gracefully handle browser referrer notices from external SDKs
+window.addEventListener('unhandledrejection', (event) => {
+  const reasonStr = String(event?.reason?.message || event?.reason || '');
+  if (reasonStr.includes('No referrer found')) {
+    console.warn('Puter.js referrer notice handled gracefully. Ready for synthesis.');
+    event.preventDefault();
+  }
+});
+
 // ── Form Submission ───────────────────────────────────────────────────────
 if (scaffoldForm) {
   scaffoldForm.addEventListener('submit', async (e) => {
@@ -2512,11 +2521,23 @@ if (scaffoldForm) {
     startThinkingTerminal();
 
     try {
+      let puterScaffold = null;
       if (selectedEngine === 'puter') {
         // --- ROUTE 1: PUTER.JS MULTI-MODEL REVIEW-DRIVEN CLIENT ENGINE ---
         logToThinkingTerminal('ENGINE', 'Using Puter.js Multi-Model Frontier Engine (Free & Keyless)', 'text-blue-400 font-bold');
-        const puterScaffold = await generateWithPuterReviewDriven({ title, scope, customStack, notes });
+        try {
+          puterScaffold = await generateWithPuterReviewDriven({ title, scope, customStack, notes });
+        } catch (puterErr) {
+          logToThinkingTerminal('WARN', `Puter client unavailable (${puterErr.message}). Switching to Server Engine...`, 'text-amber-300 font-bold');
+          showToast('Puter client context restricted. Seamlessly switching to Server Engine.');
+          selectedEngine = 'server';
+          if (selectEngineServerBtn && selectEnginePuterBtn) {
+            selectEngineServerBtn.click();
+          }
+        }
+      }
 
+      if (puterScaffold) {
         // Optionally sync to backend database if token is available
         const token = await ensureAuthToken();
         if (token) {
@@ -2576,7 +2597,7 @@ if (scaffoldForm) {
         stopThinkingTerminal(`All specifications synthesized via ${puterScaffold.winningModel}.`);
         showToast(`Specifications ready via ${puterScaffold.winningModel}`);
 
-      } else {
+      } if (!puterScaffold) {
         // --- ROUTE 2: SERVER ENGINE (GEMINI API) ---
         const token = await ensureAuthToken();
         if (!token) { alert('Authentication failed. Cannot connect to API.'); return; }
