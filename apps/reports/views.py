@@ -215,8 +215,8 @@ class ScaffoldListCreateView(OwnedScaffoldsMixin, generics.ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class ScaffoldDetailView(OwnedScaffoldsMixin, generics.RetrieveAPIView):
-    """GET /api/scaffolds/<uuid>/ -> Get complete generated specs & status"""
+class ScaffoldDetailView(OwnedScaffoldsMixin, generics.RetrieveUpdateAPIView):
+    """GET/PUT/PATCH /api/scaffolds/<uuid>/ -> Get or update generated specs & status"""
 
     permission_classes = [IsAuthenticated]
     serializer_class = ProjectScaffoldDetailSerializer

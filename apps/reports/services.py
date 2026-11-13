@@ -709,6 +709,7 @@ Analyze this document and extract the project title, executive summary, categori
     fallback = extract_scope_fields_fallback(effective_scope, filename=filename)
     if doc_title and (not fallback.get("title") or fallback.get("title") == "Enterprise Software System"):
         fallback["title"] = doc_title
+    cache.set(cache_key, fallback, timeout=3600)
     return fallback
 
 
