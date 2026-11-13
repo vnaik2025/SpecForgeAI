@@ -165,6 +165,12 @@ const reviewDrivenWorkflowCheck = document.getElementById('reviewDrivenWorkflowC
 const autoModelFallbackCheck    = document.getElementById('autoModelFallbackCheck');
 const fallbackChainPreview      = document.getElementById('fallbackChainPreview');
 const engineStatusPill          = document.getElementById('engineStatusPill');
+const puterAuthBox              = document.getElementById('puterAuthBox');
+const puterAuthDot              = document.getElementById('puterAuthDot');
+const puterAuthStatusText       = document.getElementById('puterAuthStatusText');
+const puterAuthSubtext          = document.getElementById('puterAuthSubtext');
+const puterSignInBtn            = document.getElementById('puterSignInBtn');
+const puterSignOutBtn           = document.getElementById('puterSignOutBtn');
 let selectedEngine              = 'puter'; // Default: Free Puter.js Multi-Model Frontier Routing
 
 const currentViewerFilename    = document.getElementById('currentViewerFilename');
@@ -2013,8 +2019,78 @@ if (selectEngineServerBtn && selectEnginePuterBtn) {
       engineStatusPill.textContent = 'Multi-Model Active';
       engineStatusPill.className = 'text-[10px] text-blue-700 bg-blue-100/70 border border-blue-200 px-1.5 py-0.5 rounded font-mono font-medium';
     }
+    updatePuterAuthUI();
   });
 }
+
+// Puter Authentication State Manager
+async function updatePuterAuthUI() {
+  if (typeof puter === 'undefined' || !puter.auth) return;
+  try {
+    const isAuth = typeof puter.auth.isSignedIn === 'function' ? puter.auth.isSignedIn() : false;
+    if (isAuth) {
+      const user = typeof puter.auth.getUser === 'function' ? await puter.auth.getUser().catch(() => null) : null;
+      const uname = user?.username ? `@${user.username}` : 'Authenticated';
+      if (puterAuthDot) puterAuthDot.className = "w-2 h-2 rounded-full bg-emerald-500 shrink-0";
+      if (puterAuthStatusText) puterAuthStatusText.textContent = `Signed in as ${uname}`;
+      if (puterAuthSubtext) puterAuthSubtext.textContent = 'Free Puter AI compute active';
+      if (puterSignInBtn) puterSignInBtn.classList.add('hidden');
+      if (puterSignOutBtn) puterSignOutBtn.classList.remove('hidden');
+    } else {
+      if (puterAuthDot) puterAuthDot.className = "w-2 h-2 rounded-full bg-amber-500 shrink-0";
+      if (puterAuthStatusText) puterAuthStatusText.textContent = 'Not signed in to Puter';
+      if (puterAuthSubtext) puterAuthSubtext.textContent = 'Sign in for free frontier compute';
+      if (puterSignInBtn) puterSignInBtn.classList.remove('hidden');
+      if (puterSignOutBtn) puterSignOutBtn.classList.add('hidden');
+    }
+  } catch (err) {
+    console.warn('Puter auth check notice:', err);
+  }
+}
+
+// Bind direct synchronous user click for Puter sign-in to prevent browser popup blocking
+if (puterSignInBtn) {
+  puterSignInBtn.addEventListener('click', async () => {
+    if (typeof puter === 'undefined' || !puter.auth) {
+      alert('Puter.js SDK not available. Please verify network connection or use Server Engine.');
+      return;
+    }
+    puterSignInBtn.disabled = true;
+    const origText = puterSignInBtn.innerHTML;
+    puterSignInBtn.innerHTML = '<span>Opening…</span>';
+
+    try {
+      await puter.auth.signIn();
+      await updatePuterAuthUI();
+      showToast('Successfully signed in to Puter!');
+    } catch (err) {
+      console.error('Puter sign in error:', err);
+      const msg = err?.message || String(err);
+      if (err?.code === 'popup_blocked' || msg.includes('popup')) {
+        alert('Browser blocked the Puter login popup. Look at your address bar, click the popup icon, and select "Always allow popups from localhost". Or switch to the SpecForge Server Engine.');
+      } else {
+        showToast('Puter login dialog was closed.');
+      }
+    } finally {
+      puterSignInBtn.disabled = false;
+      puterSignInBtn.innerHTML = origText;
+      updatePuterAuthUI();
+    }
+  });
+}
+
+if (puterSignOutBtn) {
+  puterSignOutBtn.addEventListener('click', async () => {
+    if (typeof puter !== 'undefined' && puter.auth && typeof puter.auth.signOut === 'function') {
+      await puter.auth.signOut().catch(() => {});
+      updatePuterAuthUI();
+      showToast('Signed out of Puter');
+    }
+  });
+}
+
+// Initialize Puter auth state on page load after SDK is ready
+setTimeout(updatePuterAuthUI, 800);
 
 // Resilient Puter AI Invocation with Automatic Fallback
 async function callPuterAI(promptOrMessages, preferredModelId = null) {
@@ -2522,6 +2598,19 @@ if (scaffoldForm) {
 
     try {
       let puterScaffold = null;
+      if (selectedEngine === 'puter') {
+        // Pre-flight check: Is Puter authenticated?
+        const isPuterAuth = (typeof puter !== 'undefined' && puter.auth && typeof puter.auth.isSignedIn === 'function') ? puter.auth.isSignedIn() : false;
+        if (!isPuterAuth) {
+          logToThinkingTerminal('AUTH', 'Puter sign-in required for client models. Automatically routing to SpecForge Server Engine...', 'text-amber-300 font-bold');
+          showToast('Puter account not signed in. Seamlessly using SpecForge Server Engine.');
+          selectedEngine = 'server';
+          if (selectEngineServerBtn && selectEnginePuterBtn) {
+            selectEngineServerBtn.click();
+          }
+        }
+      }
+
       if (selectedEngine === 'puter') {
         // --- ROUTE 1: PUTER.JS MULTI-MODEL REVIEW-DRIVEN CLIENT ENGINE ---
         logToThinkingTerminal('ENGINE', 'Using Puter.js Multi-Model Frontier Engine (Free & Keyless)', 'text-blue-400 font-bold');
