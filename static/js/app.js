@@ -171,7 +171,7 @@ const puterAuthStatusText       = document.getElementById('puterAuthStatusText')
 const puterAuthSubtext          = document.getElementById('puterAuthSubtext');
 const puterSignInBtn            = document.getElementById('puterSignInBtn');
 const puterSignOutBtn           = document.getElementById('puterSignOutBtn');
-let selectedEngine              = 'puter'; // Default: Free Puter.js Multi-Model Frontier Routing
+let selectedEngine              = 'server'; // Default: SpecForge Server Engine (Gemini 2.5 Flash API)
 
 const currentViewerFilename    = document.getElementById('currentViewerFilename');
 const currentViewerFilesize    = document.getElementById('currentViewerFilesize');
